@@ -1,0 +1,50 @@
+# Deletar o .gitignore atual
+rm .gitignore
+
+# Criar novo com encoding Unix
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# Large data files - CRITICAL
+*.pbf
+*.osm
+*.json
+*.parquet
+*.csv
+*.duckdb
+
+# Data directories - CRITICAL
+old/
+stuttgart-etl/data/raw/
+stuttgart-etl/data/staging/
+stuttgart-etl/data/duckdb/
+stuttgart-etl/data/exports/
+stuttgart-etl/data/maps/
+
+# Images
+*.png
+*.jpg
+*.jpeg
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+EOF
