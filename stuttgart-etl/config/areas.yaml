@@ -1,0 +1,6 @@
+areas:
+	stuttgart:
+		name: Stuttgart region (Baden-Württemberg)
+		geofabrik_region: europe/germany/baden-wuerttemberg
+		# Optional BBOX in EPSG:4326 (lon/lat)
+		bbox: 9.0,48.6,9.4,48.9

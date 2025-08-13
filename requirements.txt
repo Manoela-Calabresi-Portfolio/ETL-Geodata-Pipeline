@@ -1,0 +1,11 @@
+geopandas>=0.14
+osmnx>=1.9.3
+shapely>=2.0
+pyproj>=3.6
+fiona>=1.9
+pyogrio>=0.7
+gdal>=3.6; platform_system != 'Windows'
+requests>=2.31
+pandas>=2.2
+pyrosm>=0.6
+

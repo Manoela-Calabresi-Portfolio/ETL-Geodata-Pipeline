@@ -1,0 +1,2 @@
+-- Example: convert raw GeoParquet to staging tables (to be implemented incrementally)
+-- This file will be expanded as transforms are added.

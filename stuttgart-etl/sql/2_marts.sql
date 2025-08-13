@@ -1,0 +1,1 @@
+-- Example: create analytics marts (to be implemented incrementally)
