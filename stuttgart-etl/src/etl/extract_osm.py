@@ -75,7 +75,10 @@ def open_osm(pbf: Path, bbox: Optional[Tuple[float, float, float, float]]) -> OS
 	print(f"🟣 Opening PBF: {pbf}")
 	if bbox is not None:
 		print(f"   with bbox: {bbox}")
-	return OSM(pbf.as_posix(), bounding_box=bbox)
+		bbox_list = [float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])]
+	else:
+		bbox_list = None  # type: ignore[assignment]
+	return OSM(pbf.as_posix(), bounding_box=bbox_list)
 
 
 def build_roads(osm: OSM) -> gpd.GeoDataFrame:

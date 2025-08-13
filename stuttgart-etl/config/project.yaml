@@ -1,18 +1,18 @@
 paths:
-	raw_dir: data/raw
-	staging_dir: data/staging
-	duckdb_path: data/duckdb/stuttgart.duckdb
-	exports_dir: data/exports
+  raw_dir: data/raw
+  staging_dir: data/staging
+  duckdb_path: data/duckdb/stuttgart.duckdb
+  exports_dir: data/exports
 
 crs:
-	storage: EPSG:4326
-	analytics: EPSG:25832
+  storage: EPSG:4326
+  analytics: EPSG:25832
 
 etl:
-	default_layers:
-		- roads
-		- buildings
-		- landuse
-		- cycle
-		- pt_stops
-		- boundaries
+  default_layers:
+    - roads
+    - buildings
+    - landuse
+    - cycle
+    - pt_stops
+    - boundaries
