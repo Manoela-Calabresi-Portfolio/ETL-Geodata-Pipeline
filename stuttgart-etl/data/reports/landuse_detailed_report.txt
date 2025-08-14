@@ -1,0 +1,27 @@
+
+============================================================
+✅ LAYER REPORT: LANDUSE
+============================================================
+Status: ✅ GOOD
+Features: 30,772
+CRS: {"$schema": "https://proj.org/schemas/v0.7/projjson.schema.json", "type": "GeographicCRS", "name": "WGS 84", "datum_ensemble": {"name": "World Geodetic System 1984 ensemble", "members": [{"name": "World Geodetic System 1984 (Transit)"}, {"name": "World Geodetic System 1984 (G730)"}, {"name": "World Geodetic System 1984 (G873)"}, {"name": "World Geodetic System 1984 (G1150)"}, {"name": "World Geodetic System 1984 (G1674)"}, {"name": "World Geodetic System 1984 (G1762)"}, {"name": "World Geodetic System 1984 (G2139)"}, {"name": "World Geodetic System 1984 (G2296)"}], "ellipsoid": {"name": "WGS 84", "semi_major_axis": 6378137, "inverse_flattening": 298.257223563}, "accuracy": "2.0", "id": {"authority": "EPSG", "code": 6326}}, "coordinate_system": {"subtype": "ellipsoidal", "axis": [{"name": "Geodetic latitude", "abbreviation": "Lat", "direction": "north", "unit": "degree"}, {"name": "Geodetic longitude", "abbreviation": "Lon", "direction": "east", "unit": "degree"}]}, "scope": "Horizontal component of 3D system.", "area": "World.", "bbox": {"south_latitude": -90, "west_longitude": -180, "north_latitude": 90, "east_longitude": 180}, "id": {"authority": "EPSG", "code": 4326}}
+Memory: 4.9 MB
+Columns: 6
+
+📐 GEOMETRY ANALYSIS:
+  • Polygon: 30,509
+  • MultiPolygon: 243
+  • LineString: 18
+  • GeometryCollection: 1
+  • MultiLineString: 1
+
+🗺️ SPATIAL ANALYSIS:
+  • Bounds: 9.000, 48.600, 9.400, 48.900
+  • Within Stuttgart: ⚠️ No
+  • Density: 20.8 features/km²
+  • Polygon areas: 1.4 - 25598065.9 m²
+  • Line lengths: 8.1 - 111.5 m
+
+📊 ATTRIBUTE ANALYSIS:
+  ⚠️ High null percentages:
+    - natural: 84.9% null

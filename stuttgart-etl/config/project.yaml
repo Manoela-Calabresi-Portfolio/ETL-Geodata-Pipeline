@@ -16,3 +16,8 @@ etl:
     - cycle
     - pt_stops
     - boundaries
+
+# AI Assistant configuration
+ai_assistant:
+  prompt_file: config/ai_assistant_prompt.md
+  last_updated: "2025-01-27"

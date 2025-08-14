@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 from pyrosm import OSM  # type: ignore
 
-from .utils import ensure_directory, compute_area_m2, compute_length_m
+from .utils import ensure_directory, compute_area_m2, compute_length_m, clean_geometries
 
 
 def _human_size(num_bytes: int) -> str:
@@ -93,6 +93,9 @@ def build_roads(osm: OSM) -> gpd.GeoDataFrame:
 	gdf = gdf[gdf.geometry.type.isin(["LineString", "MultiLineString"])]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "highway", "maxspeed", "lanes", "surface", "oneway", "bridge", "tunnel", "access", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates, filter very short segments (<1 m)
+	gdf = clean_geometries(gdf, min_length_m=1.0)
+	# Metrics after cleaning
 	gdf = compute_length_m(gdf)
 	gdf["category"] = "roads"
 	print(f"   features: {len(gdf)}")
@@ -111,6 +114,9 @@ def build_buildings(osm: OSM) -> gpd.GeoDataFrame:
 	gdf = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "building", "levels", "height", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates, filter tiny polygons (<1 m²)
+	gdf = clean_geometries(gdf, min_area_m2=1.0)
+	# Metrics after cleaning
 	gdf = compute_area_m2(gdf)
 	gdf["category"] = "buildings"
 	print(f"   features: {len(gdf)}")
@@ -138,6 +144,9 @@ def build_landuse(osm: OSM) -> gpd.GeoDataFrame:
 		gdf["natural"] = pd.Series(dtype="object")
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "landuse", "natural", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates, filter tiny polygons (<1 m²)
+	gdf = clean_geometries(gdf, min_area_m2=1.0)
+	# Metrics after cleaning
 	gdf = compute_area_m2(gdf)
 	gdf["category"] = "landuse"
 	print(f"   features: {len(gdf)}")
@@ -168,6 +177,9 @@ def build_cycle(osm: OSM) -> gpd.GeoDataFrame:
 	gdf = gdf[gdf.geometry.type.isin(["LineString", "MultiLineString"])]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "highway", "cycleway", "bicycle", "surface", "segregated", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates, filter very short segments (<1 m)
+	gdf = clean_geometries(gdf, min_length_m=1.0)
+	# Metrics after cleaning
 	gdf = compute_length_m(gdf)
 	gdf["category"] = "cycle"
 	print(f"   features: {len(gdf)}")
@@ -176,7 +188,7 @@ def build_cycle(osm: OSM) -> gpd.GeoDataFrame:
 
 def build_pt_stops(osm: OSM) -> gpd.GeoDataFrame:
 	print("🟪 Building layer: pt_stops")
-	pois = osm.get_pois(categories=["public_transport", "railway", "aeroway", "aerialway", "amenity"])
+	pois = osm.get_pois(custom_filter={"public_transport": True, "railway": True, "aeroway": True, "aerialway": True, "amenity": True})
 	bus = osm.get_data_by_custom_criteria(
 		custom_filter={"highway": ["bus_stop"]},
 		filter_type="keep",
@@ -196,6 +208,8 @@ def build_pt_stops(osm: OSM) -> gpd.GeoDataFrame:
 	gdf = gdf[gdf.geometry.notna()]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "railway", "public_transport", "highway", "amenity", "aeroway", "aerialway", "operator", "network", "ref", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates
+	gdf = clean_geometries(gdf)
 	gdf["category"] = "pt_stops"
 	print(f"   features: {len(gdf)}")
 	return gdf
@@ -224,6 +238,8 @@ def build_boundaries(osm: OSM) -> gpd.GeoDataFrame:
 	gdf = gdf[gdf.geometry.notna()]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
 	gdf = gdf[[c for c in ["osmid", "name", "admin_level", "boundary", "geometry"] if c in gdf.columns]]
+	# Clean: fix invalid, drop duplicates
+	gdf = clean_geometries(gdf)
 	gdf["category"] = "boundaries"
 	print(f"   features: {len(gdf)}")
 	return gdf
@@ -231,7 +247,7 @@ def build_boundaries(osm: OSM) -> gpd.GeoDataFrame:
 
 def build_amenities(osm: OSM) -> gpd.GeoDataFrame:
 	print("🟪 Building layer: amenities")
-	amen = osm.get_pois(categories=["amenity"])  # generic OSM amenities
+	amen = osm.get_pois(custom_filter={"amenity": True})  # generic OSM amenities
 	if amen is None or amen.empty:
 		return gpd.GeoDataFrame(geometry=[], crs="EPSG:4326")
 	gdf = amen.copy()
@@ -239,8 +255,12 @@ def build_amenities(osm: OSM) -> gpd.GeoDataFrame:
 		gdf.set_crs("EPSG:4326", inplace=True)
 	gdf = gdf[gdf.geometry.notna()]
 	gdf.rename(columns={"id": "osmid"}, inplace=True)
+	# Keep only Point/Polygon amenities; drop lines
 	wanted = ["osmid", "name", "amenity", "operator", "capacity", "opening_hours", "geometry"]
 	gdf = gdf[[c for c in wanted if c in gdf.columns]]
+	gdf = gdf[gdf.geometry.type.isin(["Point", "Polygon", "MultiPolygon"])]
+	# Clean: fix invalid, drop duplicates, filter tiny polygons (<1 m²)
+	gdf = clean_geometries(gdf, min_area_m2=1.0)
 	gdf["category"] = "amenities"
 	print(f"   features: {len(gdf)}")
 	return gdf

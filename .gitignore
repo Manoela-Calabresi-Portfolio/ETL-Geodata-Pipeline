@@ -13,4 +13,6 @@ stuttgart-etl/data/maps/*.png
 # Python cache
 __pycache__/
 *.pyc
+# AI assistant prompt
+stuttgart-etl/config/ai_assistant_prompt.md
 EOF
