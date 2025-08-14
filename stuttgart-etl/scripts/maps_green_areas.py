@@ -23,6 +23,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import geopandas as gpd
+try:
+    import contextily as cx  # for basemaps
+except Exception:  # pragma: no cover
+    cx = None  # type: ignore
 import pandas as pd
 import numpy as np
 
@@ -126,6 +130,82 @@ def plot_overview(gdf: gpd.GeoDataFrame, out: Path) -> None:
     plt.close()
 
 
+def plot_overview_basemap(gdf: gpd.GeoDataFrame, out: Path) -> None:
+    """Plot overview on top of an OSM basemap with analytics CRS (EPSG:25832).
+
+    We keep the axis in EPSG:25832 and let contextily reproject tiles internally
+    so north stays up and CRS discipline is respected.
+    """
+    if cx is None:
+        plot_overview(gdf, out)
+        return
+
+    gdf_utm = gdf.to_crs(PLOT_CRS)
+    extent = tuple(gdf_utm.total_bounds)
+
+    fig, ax = plt.subplots(1, 1, figsize=(14, 11))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+
+    # Basemap in 25832 (contextily will transform the requested extent)
+    try:
+        cx.add_basemap(
+            ax,
+            source=cx.providers.OpenStreetMap.Mapnik,
+            crs=PLOT_CRS,
+            zoom=None,
+            attribution="© OpenStreetMap contributors",
+        )
+        ax.set_xlim(extent[0], extent[2])
+        ax.set_ylim(extent[1], extent[3])
+    except Exception:
+        pass
+
+    # Overlay polygons with transparency
+    gdf_utm.plot(ax=ax, facecolor="#66bb6a", edgecolor="#2e7d32", linewidth=0.25, alpha=0.5)
+
+    ax.set_title("Stuttgart – Green Areas (Overview + Basemap)", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Easting (m) – EPSG:25832")
+    ax.set_ylabel("Northing (m)")
+    ax.set_aspect("equal")
+    ax.grid(False)
+
+    # Add simple north arrow and scalebar
+    try:
+        # North arrow
+        ax.annotate(
+            "N",
+            xy=(0.97, 0.12),
+            xytext=(0.97, 0.22),
+            xycoords="axes fraction",
+            textcoords="axes fraction",
+            arrowprops=dict(arrowstyle="-|>", color="black"),
+            ha="center",
+            va="center",
+            fontsize=12,
+            color="black",
+            fontweight="bold",
+        )
+
+        # Scalebar (~5 km chunk)
+        dx = extent[2] - extent[0]
+        target = max(1000.0, min(5000.0, dx / 6))  # choose sensible length
+        # Round to nearest 500 m
+        step = 500.0
+        length = round(target / step) * step
+        x0 = extent[0] + dx * 0.05
+        y0 = extent[1] + (extent[3] - extent[1]) * 0.07
+        ax.plot([x0, x0 + length], [y0, y0], color="black", linewidth=3)
+        ax.plot([x0, x0], [y0 - length * 0.003, y0 + length * 0.003], color="black", linewidth=2)
+        ax.plot([x0 + length, x0 + length], [y0 - length * 0.003, y0 + length * 0.003], color="black", linewidth=2)
+        ax.text(x0 + length / 2, y0 + length * 0.006, f"{int(length/1000)} km", ha="center", va="bottom", fontsize=10)
+    except Exception:
+        pass
+    plt.tight_layout()
+    plt.savefig(out, dpi=150, bbox_inches="tight")
+    plt.close()
+
+
 def plot_by_category(gdf: gpd.GeoDataFrame, out: Path) -> None:
     gdfp, extent = _project_and_extent(gdf)
     fig, ax = plt.subplots(1, 1, figsize=(16, 12))
@@ -161,9 +241,11 @@ def main() -> None:
         return
 
     plot_overview(green, maps_dir / "stuttgart_green_areas_overview.png")
+    plot_overview_basemap(green, maps_dir / "stuttgart_green_areas_overview_basemap.png")
     plot_by_category(green, maps_dir / "stuttgart_green_areas_by_category.png")
     print("Saved maps:")
     print(" -", maps_dir / "stuttgart_green_areas_overview.png")
+    print(" -", maps_dir / "stuttgart_green_areas_overview_basemap.png")
     print(" -", maps_dir / "stuttgart_green_areas_by_category.png")
 
 

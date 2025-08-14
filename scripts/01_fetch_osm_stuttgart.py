@@ -213,17 +213,28 @@ def process_roads_bulk(osm) -> gpd.GeoDataFrame:
 
 
 def process_cycle_paths(polygon: BaseGeometry) -> gpd.GeoDataFrame:
-    # Union of dedicated cycleways and ways that have cycleway/bicycle designation
+    # Focus on dedicated cycling infrastructure only
     parts: List[gpd.GeoDataFrame] = []
 
-    # Dedicated cycleway ways
+    # 1. Dedicated cycleway ways
     parts.append(fetch_osm_geometries(polygon, {"highway": ["cycleway"]}))
-    # Ways with any cycleway tag
-    parts.append(fetch_osm_geometries(polygon, {"cycleway": True}))
-    # Bicycle-designated paths/footways
+    
+    # 2. National bike routes
+    parts.append(fetch_osm_geometries(polygon, {"route": "bicycle", "network": "ncn"}))
+    
+    # 3. Regional bike routes  
+    parts.append(fetch_osm_geometries(polygon, {"route": "bicycle", "network": "rcn"}))
+    
+    # 4. Local bike routes
+    parts.append(fetch_osm_geometries(polygon, {"route": "bicycle", "network": "lcn"}))
+    
+    # 5. Ways with explicit cycleway infrastructure (not just "no")
+    parts.append(fetch_osm_geometries(polygon, {"cycleway": ["lane", "track", "opposite", "opposite_track", "shared_lane", "separate"]}))
+    
+    # 6. Bicycle-designated paths/footways
     parts.append(
         fetch_osm_geometries(
-            polygon, {"highway": ["path", "footway"], "bicycle": ["designated", "yes"]}
+            polygon, {"highway": ["path", "footway"], "bicycle": ["designated"]}
         )
     )
 
@@ -233,7 +244,7 @@ def process_cycle_paths(polygon: BaseGeometry) -> gpd.GeoDataFrame:
 
     # Keep linear geometries only
     gdf = gdf[gdf.geometry.type.isin(["LineString", "MultiLineString"])]
-    gdf = gdf.drop_duplicates(subset=["osmid", "geometry"], keep="first")
+    gdf = gdf.drop_duplicates(subset=["osmid"], keep="first")
     gdf = select_columns(
         gdf,
         [
@@ -243,6 +254,8 @@ def process_cycle_paths(polygon: BaseGeometry) -> gpd.GeoDataFrame:
             "surface",
             "segregated",
             "oneway:bicycle",
+            "route",
+            "network",
         ],
     )
     gdf = compute_length_m(gdf)
@@ -251,30 +264,89 @@ def process_cycle_paths(polygon: BaseGeometry) -> gpd.GeoDataFrame:
 
 
 def process_cycle_paths_bulk(osm) -> gpd.GeoDataFrame:
-    cycling = osm.get_network(network_type="cycling")
     parts: List[gpd.GeoDataFrame] = []
-    if cycling is not None and not cycling.empty:
-        parts.append(cycling)
-    # Additional custom filter: ways with cycleway tag
-    extra = osm.get_data_by_custom_criteria(
-        custom_filter={"cycleway": True},
+    
+    # 1. Dedicated cycleways (highway=cycleway)
+    cycleways = osm.get_data_by_custom_criteria(
+        custom_filter={"highway": ["cycleway"]},
         filter_type="keep",
         keep_ways=True,
         keep_nodes=False,
         keep_relations=False,
     )
-    if extra is not None and not extra.empty:
-        parts.append(extra)
+    if cycleways is not None and not cycleways.empty:
+        parts.append(cycleways)
+    
+    # 2. National bike routes (route=bicycle, network=ncn)
+    national_routes = osm.get_data_by_custom_criteria(
+        custom_filter={"route": ["bicycle"], "network": ["ncn"]},
+        filter_type="keep",
+        keep_ways=True,
+        keep_nodes=False,
+        keep_relations=True,
+    )
+    if national_routes is not None and not national_routes.empty:
+        parts.append(national_routes)
+    
+    # 3. Regional bike routes (route=bicycle, network=rcn)
+    regional_routes = osm.get_data_by_custom_criteria(
+        custom_filter={"route": ["bicycle"], "network": ["rcn"]},
+        filter_type="keep",
+        keep_ways=True,
+        keep_nodes=False,
+        keep_relations=True,
+    )
+    if regional_routes is not None and not regional_routes.empty:
+        parts.append(regional_routes)
+    
+    # 4. Local bike routes (route=bicycle, network=lcn)
+    local_routes = osm.get_data_by_custom_criteria(
+        custom_filter={"route": ["bicycle"], "network": ["lcn"]},
+        filter_type="keep",
+        keep_ways=True,
+        keep_nodes=False,
+        keep_relations=True,
+    )
+    if local_routes is not None and not local_routes.empty:
+        parts.append(local_routes)
+    
+    # 5. Ways with explicit cycleway infrastructure (not just "no")
+    cycleway_infra = osm.get_data_by_custom_criteria(
+        custom_filter={"cycleway": ["lane", "track", "opposite", "opposite_track", "shared_lane", "separate"]},
+        filter_type="keep",
+        keep_ways=True,
+        keep_nodes=False,
+        keep_relations=False,
+    )
+    if cycleway_infra is not None and not cycleway_infra.empty:
+        parts.append(cycleway_infra)
+    
+    # 6. Paths/footways designated for bicycles
+    designated_paths = osm.get_data_by_custom_criteria(
+        custom_filter={"highway": ["path", "footway"], "bicycle": ["designated"]},
+        filter_type="keep",
+        keep_ways=True,
+        keep_nodes=False,
+        keep_relations=False,
+    )
+    if designated_paths is not None and not designated_paths.empty:
+        parts.append(designated_paths)
+    
     if not parts:
         return gpd.GeoDataFrame(geometry=[], crs="EPSG:4326")
+    
     gdf = pd.concat(parts, ignore_index=True)
     if gdf.crs is None:
         gdf.set_crs("EPSG:4326", inplace=True)
     gdf = gdf[gdf.geometry.notna() & gdf.geometry.type.isin(["LineString", "MultiLineString"])]
     gdf.rename(columns={"id": "osmid"}, inplace=True)
+    
+    # Remove duplicates based on osmid
+    gdf = gdf.drop_duplicates(subset=["osmid"], keep="first")
+    
     gdf = select_columns(
         gdf,
-        ["highway", "cycleway", "bicycle", "surface", "segregated", "oneway:bicycle"],
+        ["highway", "cycleway", "bicycle", "surface", "segregated", "oneway:bicycle", "route", "network"],
     )
     gdf = compute_length_m(gdf)
     gdf["category"] = "cycle_paths"
