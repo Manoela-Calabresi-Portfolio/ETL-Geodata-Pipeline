@@ -53,7 +53,6 @@ def compute_area_m2(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 	polys = gdf.to_crs("EPSG:25832")
 	gdf["area_m2"] = polys.geometry.area
 	return gdf
-AQQQ
 
 def _make_geometries_valid(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 	"""Return a copy with valid geometries (attempt repair if invalid)."""
