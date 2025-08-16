@@ -1,18 +1,70 @@
-# Deletar e recriar
-rm .gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-cat > .gitignore << 'EOF'
-# Large files only
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Data files
+*.parquet
+*.parquet.backup
+*.duckdb
+*.osm.pbf
+*.geojson
+*.shp
+*.dbf
+*.shx
+*.prj
+
+# Large outputs
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.html
+
+# Cache and temporary
+cache/
+.cache/
+temp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Specific paths
 old/
 stuttgart-etl/data/raw/baden-wuerttemberg-latest.osm.pbf
 stuttgart-etl/data/staging/*.parquet
 stuttgart-etl/data/duckdb/*.duckdb
 stuttgart-etl/data/exports/*.geojson
 stuttgart-etl/data/maps/*.png
-
-# Python cache
-__pycache__/
-*.pyc
-# AI assistant prompt
 stuttgart-etl/config/ai_assistant_prompt.md
-EOF
