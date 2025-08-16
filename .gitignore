@@ -35,6 +35,8 @@ venv/
 *.dbf
 *.shx
 *.prj
+*.csv
+*.tsv
 
 # Large outputs
 *.png
@@ -43,11 +45,26 @@ venv/
 *.pdf
 *.html
 
+# Generated reports and results
+**/reports/*.json
+**/validation/*.json
+**/results/*.json
+*_report.json
+*_results.json
+*_summary.json
+
 # Cache and temporary
 cache/
 .cache/
 temp/
 tmp/
+__temp__/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+*.tmp
 
 # IDE
 .vscode/
@@ -59,6 +76,14 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # Specific paths
 old/
