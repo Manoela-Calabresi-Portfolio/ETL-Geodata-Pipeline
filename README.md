@@ -1,39 +1,42 @@
 # ETL Geodata Pipeline - Comprehensive Documentation
 
-## 🎯 Project Overview
+**Author:** Manoela Calabresi, Urban Planner & Spatial Analyst  
+**LinkedIn:** [https://www.linkedin.com/in/manoela-calabresi/](https://www.linkedin.com/in/manoela-calabresi/)
+
+## 🔺 Project Overview
 
 The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing OpenStreetMap (OSM) geodata into meaningful, categorized layers. Built with Python and designed for urban analysis, this pipeline transforms raw OSM data into clean, categorized datasets ready for analysis and visualization.
 
 ### Key Features
-- **🌍 City-Agnostic**: Add new cities by simply creating YAML configuration files
-- **🎯 Intelligent Categorization**: Reduces "other" categories from 60k+ to <1% through smart classification
-- **📊 Comprehensive Coverage**: Processes 6 thematic layers with 50+ total categories
-- **🗺️ Dual Visualization**: Both clean and detailed map generation
-- **⚡ Efficient Processing**: Uses QuackOSM for fast OSM data extraction
-- **📁 Clean Architecture**: Modular design with clear separation of concerns
+- **🟪 City-Agnostic**: Add new cities by simply creating YAML configuration files
+- **🟪 Intelligent Categorization**: Reduces "other" categories from 60k+ to <1% through smart classification
+- **🟪 Comprehensive Coverage**: Processes 6 thematic layers with 50+ total categories
+- **🟪 Dual Visualization**: Both clean and detailed map generation
+- **🟪 Efficient Processing**: Uses QuackOSM for fast OSM data extraction
+- **🟪 Clean Architecture**: Modular design with clear separation of concerns
 
 ---
 
-## 📁 Project Structure
+## 🔺 Project Structure
 
 ```
 ETL-Geodata-Pipeline/
-├── pipeline/                    # 🔧 Core Pipeline Components
-│   ├── config/                 # ⚙️ Configuration Files
+├── pipeline/                    # 🔺 Core Pipeline Components
+│   ├── config/                 # 🟪 Configuration Files
 │   │   ├── pipeline.yaml       # Main pipeline settings
 │   │   ├── osm_filters.yaml    # OSM extraction filters
 │   │   ├── *_rules.yaml        # Category mapping rules (8 files)
-│   ├── scripts/                # 🐍 Python Scripts
+│   ├── scripts/                # 🟣 Python Scripts
 │   │   ├── extract_quackosm.py # [STEP 1] OSM data extraction
 │   │   ├── process_layers.py   # [STEP 2] Data processing & categorization
 │   │   ├── create_clean_maps.py     # [STEP 3A] Clean map generation
 │   │   ├── create_thematic_maps.py  # [STEP 3B] Detailed map generation
 │   │   ├── test_pipeline.py    # [STEP 0] Pipeline testing
 │   │   └── utils.py            # Shared utilities
-│   ├── areas/                  # 🏙️ City-Specific Configurations
+│   ├── areas/                  # 🟨 City-Specific Configurations
 │   │   └── stuttgart.yaml      # Stuttgart parameters
-│   └── EXECUTION_ORDER.md      # 📋 Detailed execution guide
-├── data_final/                 # 💾 Processed Data by City
+│   └── EXECUTION_ORDER.md      # 🔻 Detailed execution guide
+├── data_final/                 # 🔺 Processed Data by City
 │   └── stuttgart/
 │       ├── raw/               # Original OSM PBF files
 │       ├── staging/           # Extracted thematic layers
@@ -41,16 +44,16 @@ ETL-Geodata-Pipeline/
 │       └── maps/
 │           ├── clean/         # Clean, readable maps
 │           └── detailed/      # Comprehensive thematic maps
-├── docs/                      # 📚 Documentation
+├── docs/                      # 🟪 Documentation
 │   ├── README_FINAL.md        # Comprehensive documentation
 │   └── requirements.txt       # Python dependencies
-└── archive/                   # 🗄️ Archived Systems
+└── archive/                   # 🟣 Archived Systems
     └── stuttgart-etl-old/     # Previous system backup
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔻 Quick Start Guide
 
 ### Prerequisites
 - **Python 3.8+**
@@ -77,9 +80,9 @@ ETL-Geodata-Pipeline/
 
 ---
 
-## 📋 Pipeline Execution Order
+## 🟪 Pipeline Execution Order
 
-### **STEP 0** 🧪 **Test Pipeline** *(Optional - Recommended for first run)*
+### **STEP 0** 🔺 **Test Pipeline** *(Optional - Recommended for first run)*
 ```bash
 python pipeline/scripts/test_pipeline.py --city stuttgart --test
 ```
@@ -88,7 +91,7 @@ python pipeline/scripts/test_pipeline.py --city stuttgart --test
 - **Duration**: ~2-3 minutes
 - **Use Case**: First-time setup, debugging, development
 
-### **STEP 1** 📥 **Extract OSM Data** *(Required)*
+### **STEP 1** 🔻 **Extract OSM Data** *(Required)*
 ```bash
 python pipeline/scripts/extract_quackosm.py --city stuttgart
 ```
@@ -104,7 +107,7 @@ python pipeline/scripts/extract_quackosm.py --city stuttgart
   - 🏪 Amenities (62,087 features)
   - 🚌 Public Transport Stops (8,299 features)
 
-### **STEP 2** ⚙️ **Process & Categorize Data** *(Required)*
+### **STEP 2** 🟪 **Process & Categorize Data** *(Required)*
 ```bash
 python pipeline/scripts/process_layers.py --city stuttgart
 ```
@@ -118,7 +121,7 @@ python pipeline/scripts/process_layers.py --city stuttgart
   - 🏢 Buildings: 380,019 → 8 functional categories
   - 🛣️ Roads: 76,620 → 7 hierarchy categories
 
-### **STEP 3A** 🗺️ **Generate Clean Maps** *(Recommended)*
+### **STEP 3A** 🟣 **Generate Clean Maps** *(Recommended)*
 ```bash
 python pipeline/scripts/create_clean_maps.py
 ```
@@ -131,7 +134,7 @@ python pipeline/scripts/create_clean_maps.py
   - 🌆 `stuttgart_clean_overview.png` - Simplified city overview
   - 🏪 `stuttgart_clean_amenities.png` - Key services only
 
-### **STEP 3B** 🗺️ **Generate Detailed Maps** *(Alternative)*
+### **STEP 3B** 🟨 **Generate Detailed Maps** *(Alternative)*
 ```bash
 python pipeline/scripts/create_thematic_maps.py
 ```
@@ -143,9 +146,9 @@ python pipeline/scripts/create_thematic_maps.py
 
 ---
 
-## 📊 Data Layers & Categories
+## 🔺 Data Layers & Categories
 
-### 🚌 **Public Transport (12 Categories)**
+### 🔻 **Public Transport (12 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **bus** | 3,836 | Regular bus stops |
@@ -161,7 +164,7 @@ python pipeline/scripts/create_thematic_maps.py
 | **transport_hub** | 15 | Major interchanges |
 | **other** | 4 | Unclassified (0.05%) |
 
-### 🏪 **Amenities (21 Categories)**
+### 🟪 **Amenities (21 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **parking** | 19,850 | Parking spaces & facilities |
@@ -186,7 +189,7 @@ python pipeline/scripts/create_thematic_maps.py
 | **accommodation** | 5 | Dormitories |
 | **other** | 522 | Unclassified (0.8%) |
 
-### 🏢 **Buildings (8 Categories)**
+### 🟣 **Buildings (8 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **residential** | 141,478 | Houses, apartments |
@@ -198,7 +201,7 @@ python pipeline/scripts/create_thematic_maps.py
 | **religious** | 523 | Churches, temples |
 | **other** | 188,975 | Unspecified buildings |
 
-### 🛣️ **Roads (7 Categories)**
+### 🟨 **Roads (7 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **service** | 33,128 | Service roads, driveways |
@@ -209,7 +212,7 @@ python pipeline/scripts/create_thematic_maps.py
 | **motorway** | 428 | Highways |
 | **other** | 866 | Unclassified roads |
 
-### 🌳 **Land Use (4 Categories)**
+### 🔺 **Land Use (4 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **agricultural** | 4,438 | Farmland, crops |
@@ -217,7 +220,7 @@ python pipeline/scripts/create_thematic_maps.py
 | **urban** | 1,081 | Residential, commercial |
 | **other** | 4,935 | Mixed/unclassified |
 
-### 🚴 **Cycling Infrastructure (2 Categories)**
+### 🔻 **Cycling Infrastructure (2 Categories)**
 | Category | Count | Description |
 |----------|-------|-------------|
 | **dedicated_cycleway** | 698 | Dedicated bike paths |
@@ -225,7 +228,7 @@ python pipeline/scripts/create_thematic_maps.py
 
 ---
 
-## ⚙️ Configuration System
+## 🟪 Configuration System
 
 ### City Configuration (`pipeline/areas/stuttgart.yaml`)
 ```yaml
@@ -275,7 +278,7 @@ Each layer has its own categorization rules:
 
 ---
 
-## 🔧 Adding New Cities
+## 🔺 Adding New Cities
 
 ### 1. Create City Configuration
 Create `pipeline/areas/your_city.yaml`:
@@ -310,7 +313,7 @@ python pipeline/scripts/create_clean_maps.py
 
 ---
 
-## 🛠️ Technical Architecture
+## 🟣 Technical Architecture
 
 ### Core Technologies
 - **Python 3.8+** - Main programming language
@@ -335,7 +338,7 @@ Map Generation → PNG Visualizations
 
 ---
 
-## 📈 Key Achievements
+## 🟨 Key Achievements
 
 ### Data Quality Improvements
 - **Amenities**: Reduced "other" from 58,000+ to 522 (99.2% categorized)
@@ -351,7 +354,7 @@ Map Generation → PNG Visualizations
 
 ---
 
-## 🔍 Troubleshooting
+## 🔺 Troubleshooting
 
 ### Common Issues
 
@@ -388,7 +391,7 @@ python pipeline/scripts/extract_quackosm.py --city stuttgart --debug
 
 ---
 
-## 📊 Complementary Spatial Analysis
+## 🟪 Complementary Spatial Analysis
 
 ### Stuttgart Mobility & Walkability Analysis
 A specialized analysis pipeline that builds on the main ETL pipeline to calculate mobility and walkability indicators for Stuttgart's 23 Stadtbezirke (districts).
@@ -396,11 +399,11 @@ A specialized analysis pipeline that builds on the main ETL pipeline to calculat
 **Location**: `spatial_analysis/`
 
 **Key Features**:
-- **🚌 Public Transport Analysis**: High-frequency stop access, line diversity
-- **🚶 Walkability Metrics**: Intersection density, POI accessibility  
-- **🌳 Green Space Access**: Distance to public green areas
-- **📊 District Rankings**: Comprehensive mobility scoring
-- **🗺️ Interactive Maps**: Visualization of results
+- **🔺 Public Transport Analysis**: High-frequency stop access, line diversity
+- **🔺 Walkability Metrics**: Intersection density, POI accessibility  
+- **🔺 Green Space Access**: Distance to public green areas
+- **🔺 District Rankings**: Comprehensive mobility scoring
+- **🔺 Interactive Maps**: Visualization of results
 
 **Quick Start**:
 ```bash
@@ -415,7 +418,7 @@ python spatial_analysis/scripts/1_data_collection.py
 
 ---
 
-## 🚀 Future Enhancements (Phase 2)
+## 🔻 Future Enhancements (Phase 2)
 
 ### Planned Features
 1. **DuckDB Integration** - SQL analytics on geodata
@@ -433,7 +436,7 @@ python spatial_analysis/scripts/1_data_collection.py
 
 ---
 
-## 📝 Contributing
+## 🟪 Contributing
 
 ### Development Setup
 1. Fork repository
@@ -452,13 +455,13 @@ python spatial_analysis/scripts/1_data_collection.py
 
 ---
 
-## 📄 License
+## 🔺 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## 🟣 Acknowledgments
 
 - **OpenStreetMap Contributors** - For providing the geodata
 - **QuackOSM Team** - For the excellent OSM processing engine
@@ -467,7 +470,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 📞 Support
+## 🟨 Support
 
 For questions, issues, or contributions:
 1. Check existing documentation
@@ -475,8 +478,8 @@ For questions, issues, or contributions:
 3. Search existing issues
 4. Create new issue with detailed description
 
-**Project Status**: ✅ Phase 1 Complete - Production Ready
+**Project Status**: 🔺 Phase 1 Complete - Production Ready
 
 ---
 
-*Last Updated: $(date '+%Y-%m-%d') - Version 1.0.0*
+*Last Updated: 2024-12-19 - Version 1.0.0*
