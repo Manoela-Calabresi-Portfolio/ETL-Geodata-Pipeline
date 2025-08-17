@@ -1,0 +1,77 @@
+# Stuttgart Mobility & Walkability Analysis Configuration
+
+# Área de estudo
+study_area:
+  name: "Stuttgart"
+  bbox: [9.0, 48.6, 9.4, 48.9]  # [min_lon, min_lat, max_lon, max_lat]
+  crs_storage: "EPSG:4326"      # WGS84 para armazenamento
+  crs_analysis: "EPSG:25832"    # UTM Zone 32N para análises métricas
+
+# Fontes de dados
+data_sources:
+  # Dados do pipeline principal (reutilizar quando possível)
+  main_pipeline:
+    amenities: "data_final/stuttgart/processed/amenities_categorized.parquet"
+    pt_stops: "data_final/stuttgart/processed/pt_stops_categorized.parquet"
+    roads: "data_final/stuttgart/processed/roads_categorized.parquet"
+    landuse: "data_final/stuttgart/processed/landuse_categorized.parquet"
+  
+  # Dados externos específicos
+  external:
+    gtfs_vvs: "https://download.mobidata-bw.de/soll-fahrplandaten-vvs.zip"
+    stadtbezirke: "https://www.stuttgart.de/open-data/stadtbezirke.geojson"  # URL exemplo
+    
+  # OSM dados adicionais via osmnx
+  osm:
+    place_name: "Stuttgart, Baden-Württemberg, Germany"
+    network_type: "walk"  # Para análise de caminhabilidade
+
+# Parâmetros de análise
+analysis_parameters:
+  # Transporte público
+  public_transport:
+    high_frequency_threshold: 15  # minutos (headway máximo para alta frequência)
+    peak_hours: ["07:00", "09:00", "17:00", "19:00"]  # Horários de pico
+    access_distance: 300  # metros (distância máxima para parada)
+    
+  # Caminhabilidade  
+  walkability:
+    poi_access_distance: 500  # metros
+    intersection_buffer: 50   # metros para limpeza de cruzamentos
+    
+  # Áreas verdes
+  green_spaces:
+    access_distance: 500  # metros
+    min_area: 1000       # m² (área mínima para considerar área verde)
+
+# POIs de interesse (categorias do pipeline principal)
+poi_categories:
+  essential_services:
+    - "education"      # escolas
+    - "healthcare"     # hospitais, clínicas
+    - "financial"      # bancos
+    - "food_beverage"  # supermercados, restaurantes
+  
+  recreation:
+    - "community"      # centros comunitários
+    - "recreation"     # áreas de lazer
+
+# Configurações de processamento
+processing:
+  parallel_jobs: 4
+  chunk_size: 1000
+  cache_results: true
+  
+# Saídas
+outputs:
+  formats: ["parquet", "geojson", "csv"]
+  maps:
+    dpi: 300
+    format: "png"
+    colormap: "viridis"
+  
+# Logging
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] %(levelname)s - %(name)s: %(message)s"
+  file: "spatial_analysis/logs/analysis.log"

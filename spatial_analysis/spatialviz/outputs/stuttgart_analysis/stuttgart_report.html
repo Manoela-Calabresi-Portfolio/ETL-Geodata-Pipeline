@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stuttgart – Urban Analysis Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header { 
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white; 
+            padding: 40px; 
+            text-align: center;
+        }
+        .header h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 15px; 
+            font-weight: 300;
+        }
+        .header p { 
+            font-size: 1.2em; 
+            opacity: 0.9; 
+            font-weight: 300;
+        }
+        .content { padding: 40px; }
+        .section { 
+            margin-bottom: 50px; 
+            background: #f8f9fa; 
+            padding: 30px; 
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        .section h2 { 
+            color: #2c3e50; 
+            margin-bottom: 20px; 
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2::before {
+            content: "📊";
+            font-size: 0.8em;
+        }
+        .overview-text {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        .overview-text h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .overview-text p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .styled-table thead tr {
+            background-color: #667eea;
+            color: white;
+            text-align: left;
+            font-weight: bold;
+        }
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid #667eea;
+        }
+        .styled-table tbody tr:hover {
+            background-color: #e8f4fd;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        .maps-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .map-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .map-item:hover {
+            transform: translateY(-5px);
+        }
+        .map-item h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        .map-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        .map-category {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #2196f3;
+        }
+        .map-category h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            .maps-gallery { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2em; }
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Stuttgart – Urban Analysis Dashboard</h1>
+            <p>Comprehensive spatial analysis of urban infrastructure and accessibility</p>
+            <p><em>Umfassende räumliche Analyse der städtischen Infrastruktur und Zugänglichkeit</em></p>
+        </div>
+        
+        <div class="content">
+            <!-- Overview Section -->
+            <div class="section">
+                <h2>Analysis Overview</h2>
+                <div class="overview-text">
+                    <h3>What This Analysis Shows</h3>
+                    <p>This comprehensive urban analysis examines Stuttgart's spatial characteristics across multiple dimensions:</p>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li><strong>Population Distribution:</strong> How residents are distributed across the city's 23 districts</li>
+                        <li><strong>Public Transport Accessibility:</strong> PT stop density and coverage patterns</li>
+                        <li><strong>Service Provision:</strong> Distribution of urban amenities relative to population</li>
+                        <li><strong>Green Infrastructure:</strong> Percentage of green land use in each district</li>
+                        <li><strong>Cycling Infrastructure:</strong> Cycle path density and network coverage</li>
+                    </ul>
+                    <p>The analysis reveals spatial patterns that can inform urban planning decisions, identify areas with service gaps, and highlight districts with strong infrastructure provision.</p>
+                </div>
+            </div>
+
+            <!-- KPI Table Section -->
+            <div class="section">
+                <h2>District Key Performance Indicators</h2>
+                <p style="margin-bottom: 20px; color: #666;">Comprehensive metrics for all 23 districts of Stuttgart</p>
+                <table border="1" class="dataframe styled-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>District</th>
+      <th>Population</th>
+      <th>Area (km²)</th>
+      <th>Pop. Density (res/km²)</th>
+      <th>PT Stops</th>
+      <th>PT Density (stops/km²)</th>
+      <th>Amenities</th>
+      <th>Service Density (per 1k res)</th>
+      <th>Green Land (%)</th>
+      <th>Cycle Length (km)</th>
+      <th>Cycle Density (km/km²)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Plieningen</td>
+      <td>13709</td>
+      <td>30.23</td>
+      <td>453.54</td>
+      <td>75</td>
+      <td>2.48</td>
+      <td>604</td>
+      <td>44.06</td>
+      <td>18.53</td>
+      <td>4.57</td>
+      <td>0.15</td>
+    </tr>
+    <tr>
+      <td>Zuffenhausen</td>
+      <td>38740</td>
+      <td>27.65</td>
+      <td>1401.09</td>
+      <td>214</td>
+      <td>7.74</td>
+      <td>1317</td>
+      <td>34.00</td>
+      <td>17.21</td>
+      <td>15.19</td>
+      <td>0.55</td>
+    </tr>
+    <tr>
+      <td>Nord</td>
+      <td>27636</td>
+      <td>15.74</td>
+      <td>1755.50</td>
+      <td>156</td>
+      <td>9.91</td>
+      <td>1095</td>
+      <td>39.62</td>
+      <td>9.43</td>
+      <td>14.09</td>
+      <td>0.89</td>
+    </tr>
+    <tr>
+      <td>Sillenbuch</td>
+      <td>23794</td>
+      <td>17.19</td>
+      <td>1384.51</td>
+      <td>138</td>
+      <td>8.03</td>
+      <td>514</td>
+      <td>21.60</td>
+      <td>33.13</td>
+      <td>16.41</td>
+      <td>0.96</td>
+    </tr>
+    <tr>
+      <td>Weilimdorf</td>
+      <td>31838</td>
+      <td>28.99</td>
+      <td>1098.23</td>
+      <td>142</td>
+      <td>4.90</td>
+      <td>1053</td>
+      <td>33.07</td>
+      <td>25.52</td>
+      <td>23.95</td>
+      <td>0.83</td>
+    </tr>
+    <tr>
+      <td>Süd</td>
+      <td>43233</td>
+      <td>21.89</td>
+      <td>1974.86</td>
+      <td>167</td>
+      <td>7.63</td>
+      <td>1499</td>
+      <td>34.67</td>
+      <td>42.16</td>
+      <td>4.66</td>
+      <td>0.21</td>
+    </tr>
+    <tr>
+      <td>Hedelfingen</td>
+      <td>10275</td>
+      <td>16.67</td>
+      <td>616.41</td>
+      <td>65</td>
+      <td>3.90</td>
+      <td>386</td>
+      <td>37.57</td>
+      <td>27.87</td>
+      <td>2.85</td>
+      <td>0.17</td>
+    </tr>
+    <tr>
+      <td>Mühlhausen</td>
+      <td>25875</td>
+      <td>21.00</td>
+      <td>1231.85</td>
+      <td>125</td>
+      <td>5.95</td>
+      <td>921</td>
+      <td>35.59</td>
+      <td>7.31</td>
+      <td>9.02</td>
+      <td>0.43</td>
+    </tr>
+    <tr>
+      <td>West</td>
+      <td>52068</td>
+      <td>42.96</td>
+      <td>1212.04</td>
+      <td>271</td>
+      <td>6.31</td>
+      <td>2410</td>
+      <td>46.29</td>
+      <td>46.01</td>
+      <td>7.95</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <td>Münster</td>
+      <td>6543</td>
+      <td>5.18</td>
+      <td>1263.66</td>
+      <td>58</td>
+      <td>11.20</td>
+      <td>240</td>
+      <td>36.68</td>
+      <td>5.46</td>
+      <td>4.90</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>Obertürkheim</td>
+      <td>8476</td>
+      <td>12.53</td>
+      <td>676.39</td>
+      <td>47</td>
+      <td>3.75</td>
+      <td>225</td>
+      <td>26.55</td>
+      <td>25.40</td>
+      <td>5.79</td>
+      <td>0.46</td>
+    </tr>
+    <tr>
+      <td>Stammheim</td>
+      <td>12770</td>
+      <td>10.03</td>
+      <td>1273.67</td>
+      <td>90</td>
+      <td>8.98</td>
+      <td>453</td>
+      <td>35.47</td>
+      <td>4.78</td>
+      <td>3.03</td>
+      <td>0.30</td>
+    </tr>
+    <tr>
+      <td>Wangen</td>
+      <td>9224</td>
+      <td>7.96</td>
+      <td>1159.39</td>
+      <td>41</td>
+      <td>5.15</td>
+      <td>411</td>
+      <td>44.56</td>
+      <td>8.42</td>
+      <td>3.90</td>
+      <td>0.49</td>
+    </tr>
+    <tr>
+      <td>Botnang</td>
+      <td>12817</td>
+      <td>4.92</td>
+      <td>2606.77</td>
+      <td>74</td>
+      <td>15.05</td>
+      <td>300</td>
+      <td>23.41</td>
+      <td>3.57</td>
+      <td>0.94</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <td>Birkach</td>
+      <td>7201</td>
+      <td>7.07</td>
+      <td>1018.03</td>
+      <td>38</td>
+      <td>5.37</td>
+      <td>141</td>
+      <td>19.58</td>
+      <td>4.98</td>
+      <td>0.63</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>Bad Cannstatt</td>
+      <td>70596</td>
+      <td>36.10</td>
+      <td>1955.31</td>
+      <td>368</td>
+      <td>10.19</td>
+      <td>3106</td>
+      <td>44.00</td>
+      <td>1.90</td>
+      <td>45.05</td>
+      <td>1.25</td>
+    </tr>
+    <tr>
+      <td>Mitte</td>
+      <td>23723</td>
+      <td>8.73</td>
+      <td>2718.73</td>
+      <td>325</td>
+      <td>37.25</td>
+      <td>3183</td>
+      <td>134.17</td>
+      <td>0.77</td>
+      <td>11.96</td>
+      <td>1.37</td>
+    </tr>
+    <tr>
+      <td>Möhringen</td>
+      <td>34140</td>
+      <td>34.49</td>
+      <td>989.78</td>
+      <td>173</td>
+      <td>5.02</td>
+      <td>1659</td>
+      <td>48.59</td>
+      <td>20.09</td>
+      <td>18.27</td>
+      <td>0.53</td>
+    </tr>
+    <tr>
+      <td>Untertürkheim</td>
+      <td>16526</td>
+      <td>14.08</td>
+      <td>1173.78</td>
+      <td>114</td>
+      <td>8.10</td>
+      <td>566</td>
+      <td>34.25</td>
+      <td>2.31</td>
+      <td>11.15</td>
+      <td>0.79</td>
+    </tr>
+    <tr>
+      <td>Feuerbach</td>
+      <td>30691</td>
+      <td>26.57</td>
+      <td>1155.29</td>
+      <td>115</td>
+      <td>4.33</td>
+      <td>985</td>
+      <td>32.09</td>
+      <td>38.78</td>
+      <td>12.81</td>
+      <td>0.48</td>
+    </tr>
+    <tr>
+      <td>Vaihingen</td>
+      <td>45915</td>
+      <td>47.91</td>
+      <td>958.31</td>
+      <td>252</td>
+      <td>5.26</td>
+      <td>2210</td>
+      <td>48.13</td>
+      <td>44.56</td>
+      <td>23.09</td>
+      <td>0.48</td>
+    </tr>
+    <tr>
+      <td>Ost</td>
+      <td>48213</td>
+      <td>20.83</td>
+      <td>2314.96</td>
+      <td>215</td>
+      <td>10.32</td>
+      <td>1492</td>
+      <td>30.95</td>
+      <td>23.25</td>
+      <td>22.53</td>
+      <td>1.08</td>
+    </tr>
+    <tr>
+      <td>Degerloch</td>
+      <td>16389</td>
+      <td>18.43</td>
+      <td>889.24</td>
+      <td>104</td>
+      <td>5.64</td>
+      <td>659</td>
+      <td>40.21</td>
+      <td>36.72</td>
+      <td>4.87</td>
+      <td>0.26</td>
+    </tr>
+  </tbody>
+</table>
+            </div>
+
+            <!-- Overview Maps Section -->
+            <div class="section">
+                <div class="map-category">
+                    <h3>🌍 City Overview Maps</h3>
+                    <p>High-level visualization of Stuttgart's urban fabric, infrastructure networks, and service distribution</p>
+                </div>
+                <div class="maps-gallery">
+                    <div class="map-item">
+                        <h3>Land Use + Roads + PT Stops</h3>
+                        <img src="maps/overview_landuse_roads_pt.png" alt="Land Use, Roads, and PT Stops Overview">
+                    </div>
+                    <div class="map-item">
+                        <h3>Amenities + PT Stops</h3>
+                        <img src="maps/overview_amenities_pt.png" alt="Amenities and PT Stops Overview">
+                    </div>
+                </div>
+            </div>
+
+            <!-- District Atlas Section -->
+            <div class="section">
+                <div class="map-category">
+                    <h3>🏘️ District Atlas</h3>
+                    <p>Detailed analysis of selected districts: Mitte, Bad Cannstatt, Vaihingen, Zuffenhausen, and Degerloch</p>
+                </div>
+                <div class="maps-gallery">
+                    <div class="map-item">
+                        <h3>Stuttgart-Mitte District</h3>
+                        <img src="maps/district_mitte.png" alt="Stuttgart-Mitte District Analysis">
+                    </div>
+                    <div class="map-item">
+                        <h3>Bad Cannstatt District</h3>
+                        <img src="maps/district_bad_cannstatt.png" alt="Bad Cannstatt District Analysis">
+                    </div>
+                    <div class="map-item">
+                        <h3>Vaihingen District</h3>
+                        <img src="maps/district_vaihingen.png" alt="Vaihingen District Analysis">
+                    </div>
+                    <div class="map-item">
+                        <h3>Zuffenhausen District</h3>
+                        <img src="maps/district_zuffenhausen.png" alt="Zuffenhausen District Analysis">
+                    </div>
+                    <div class="map-item">
+                        <h3>Degerloch District</h3>
+                        <img src="maps/district_degerloch.png" alt="Degerloch District Analysis">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close-up Analysis Section -->
+            <div class="section">
+                <div class="map-category">
+                    <h3>🔍 Close-up Analysis: Stuttgart-Mitte</h3>
+                    <p>Detailed examination of the city center with varying buffer distances for infrastructure analysis</p>
+                </div>
+                <div class="maps-gallery">
+                    <div class="map-item">
+                        <h3>500m Buffer Analysis</h3>
+                        <img src="maps/mitte_closeup_500m.png" alt="Stuttgart-Mitte 500m Buffer">
+                    </div>
+                    <div class="map-item">
+                        <h3>1km Buffer Analysis</h3>
+                        <img src="maps/mitte_closeup_1000m.png" alt="Stuttgart-Mitte 1km Buffer">
+                    </div>
+                    <div class="map-item">
+                        <h3>2km Buffer Analysis</h3>
+                        <img src="maps/mitte_closeup_2000m.png" alt="Stuttgart-Mitte 2km Buffer">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated with Python, GeoPandas, and Matplotlib | Data: Stuttgart Open Data + OpenStreetMap</p>
+        </div>
+    </div>
+</body>
+</html>

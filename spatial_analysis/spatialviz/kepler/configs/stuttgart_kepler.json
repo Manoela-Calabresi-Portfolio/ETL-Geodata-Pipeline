@@ -1,0 +1,135 @@
+{
+  "config": {
+    "mapState": {
+      "latitude": 48.78,
+      "longitude": 9.18,
+      "zoom": 11.5,
+      "pitch": 0,
+      "bearing": 0
+    },
+    "mapStyle": {
+      "styleType": "light",
+      "visibleLayerGroups": {
+        "label": true, "road": true, "border": true, "building": false, "water": true, "land": true
+      },
+      "topLayerGroups": { "label": true },
+      "color": [240, 240, 240],
+      "threeDBuildingColor": [213, 213, 213]
+    },
+    "visState": {
+      "filters": [],
+      "interactionConfig": {
+        "tooltip": {
+          "fieldsToShow": {
+            "districts": ["name", "population", "green_area_km2", "green_share_pct", "pt_stops_count", "pt_stops_per_km2", "pt_stops_per_1k", "green_access_score_pop", "green_access_score_area"],
+            "pt_stops": ["name", "type", "category"],
+            "cycle": ["highway", "cycleway"],
+            "greens": ["landuse", "natural"]
+          },
+          "enabled": true
+        },
+        "brush": { "size": 0.5, "enabled": false }
+      },
+      "layerBlending": "normal",
+      "layerOrder": [
+        {"id": "greens"},
+        {"id": "districts-choropleth"},
+        {"id": "cycle"},
+        {"id": "pt-stops"}
+      ],
+      "layers": [
+        {
+          "id": "districts-choropleth",
+          "type": "geojson",
+          "config": {
+            "dataId": "districts",
+            "label": "Districts — Access (pop)",
+            "color": [27, 94, 32],
+            "columns": { "geojson": "geometry" },
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.7,
+              "strokeOpacity": 0.6,
+              "thickness": 1,
+              "strokeColor": [85, 85, 85],
+              "colorRange": {
+                "name": "Greens 8",
+                "type": "sequential",
+                "category": "Uber",
+                "colors": ["#e8f5e9","#c8e6c9","#a5d6a7","#81c784","#66bb6a","#43a047","#2e7d32","#1b5e20"]
+              },
+              "strokeColorRange": { "name": "Global Warming", "type": "sequential", "category": "Uber" },
+              "radius": 10,
+              "sizeRange": [0, 10],
+              "elevationScale": 1
+            },
+            "textLabel": [
+              {
+                "field": { "name": "name", "type": "string" },
+                "color": [30, 41, 59],
+                "size": 12,
+                "anchor": "start",
+                "alignment": "center"
+              }
+            ]
+          },
+          "visualChannels": {
+            "colorField": { "name": "green_access_score_pop", "type": "real" },
+            "colorScale": "quantize"
+          }
+        },
+        {
+          "id": "greens",
+          "type": "geojson",
+          "config": {
+            "dataId": "greens",
+            "label": "Greens",
+            "color": [139, 211, 163],
+            "columns": { "geojson": "geometry" },
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.65,
+              "thickness": 0.5,
+              "strokeColor": [61, 122, 87],
+              "radius": 10
+            }
+          }
+        },
+        {
+          "id": "cycle",
+          "type": "geojson",
+          "config": {
+            "dataId": "cycle",
+            "label": "Cycle network",
+            "color": [14, 165, 233],
+            "columns": { "geojson": "geometry" },
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.9,
+              "thickness": 1.6,
+              "strokeColor": [14, 165, 233],
+              "radius": 2
+            }
+          }
+        },
+        {
+          "id": "pt-stops",
+          "type": "geojson",
+          "config": {
+            "dataId": "pt_stops",
+            "label": "PT stops",
+            "color": [42, 75, 141],
+            "columns": { "geojson": "geometry" },
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.9,
+              "radius": 4,
+              "strokeColor": [255, 255, 255],
+              "thickness": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

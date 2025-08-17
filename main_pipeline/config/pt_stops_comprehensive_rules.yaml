@@ -1,0 +1,61 @@
+# [CONFIG] Comprehensive PT Stops Category Mapping Rules  
+# Maps raw OSM public transport tags to detailed transport categories
+# NOTE: This uses a simple tag-based approach. For operator/network-based 
+# categorization, the processing script will need custom logic.
+
+# Railway stations (all types of rail)
+railway_station:
+  - station # All railway stations
+  - halt    # Railway halts
+  - stop    # Railway stops
+
+# Railway platforms  
+railway_platform:
+  - platform # Railway platforms (will be sub-categorized by operator)
+
+# Subway/Metro specific
+subway:
+  - subway_entrance # U-Bahn entrances
+
+# Tram specific stops
+tram:
+  - tram_stop # Dedicated tram stops
+
+# Bus stops (most common)
+bus:
+  - bus_stop # Highway bus stops
+
+# Bus stations/terminals
+bus_station: 
+  - bus_station # Amenity bus stations
+
+# Public transport platforms (general)
+platform:
+  - platform # General PT platforms
+
+# Public transport stop positions
+stop_position:
+  - stop_position # General PT stop positions
+
+# Public transport stop areas (groups of stops)
+stop_area:
+  - stop_area # Groups of related stops
+
+# Taxi stands
+taxi:
+  - taxi # Taxi amenities
+
+# Transport hubs and interchanges
+transport_hub:
+  - station # Multi-modal stations
+
+# Service/info facilities
+transport_service:
+  - entrance # PT entrances
+  - info_board # Information boards
+  - platform_edge # Platform edges
+  - platform_access # Platform access points
+  - service_center # Service centers
+
+other:
+  - "*" # Catch-all for anything not explicitly categorized

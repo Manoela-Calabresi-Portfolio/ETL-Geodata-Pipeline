@@ -1,0 +1,20 @@
+# Category mapping rules for landuse layer
+urban:
+  - residential
+  - commercial
+  - retail
+
+agricultural:
+  - farmland
+  - farm
+
+green:
+  - park
+  - forest
+  - grass
+  - meadow
+  - scrub
+
+water:
+  - water
+  - wetland

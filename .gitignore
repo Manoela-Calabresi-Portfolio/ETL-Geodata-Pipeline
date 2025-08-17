@@ -1,0 +1,68 @@
+# Large data files
+*.osm.pbf
+*.zip
+*.parquet
+*.duckdb
+*.geojson
+*.png
+*.jpg
+*.jpeg
+*.tiff
+*.tif
+
+# Specific directories with large data
+pipeline/areas/*/data_final/raw/
+pipeline/areas/*/data_final/staging/
+pipeline/areas/*/data_final/processed/
+pipeline/areas/*/data_final/maps/
+pipeline/data/staging/
+pipeline/data/raw/
+archive/backups/
+cache/
+spatial_analysis/data/raw/
+spatial_analysis/data/processed/
+spatial_analysis/outputs/maps/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# AI assistant prompt
+stuttgart-etl/config/ai_assistant_prompt.md

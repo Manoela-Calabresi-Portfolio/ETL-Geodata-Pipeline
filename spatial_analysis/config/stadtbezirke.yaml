@@ -1,0 +1,151 @@
+# Stuttgart Stadtbezirke Configuration
+
+# Informações sobre os distritos de Stuttgart
+stadtbezirke:
+  # Lista dos 23 Stadtbezirke de Stuttgart
+  districts:
+    - id: 1
+      name: "Mitte"
+      name_en: "Center"
+      population: 22000  # Aproximado - será atualizado com dados oficiais
+      
+    - id: 2  
+      name: "Nord"
+      name_en: "North"
+      population: 28000
+      
+    - id: 3
+      name: "Ost" 
+      name_en: "East"
+      population: 25000
+      
+    - id: 4
+      name: "Süd"
+      name_en: "South" 
+      population: 31000
+      
+    - id: 5
+      name: "West"
+      name_en: "West"
+      population: 58000
+      
+    - id: 6
+      name: "Bad Cannstatt"
+      name_en: "Bad Cannstatt"
+      population: 70000
+      
+    - id: 7
+      name: "Birkach"
+      name_en: "Birkach"
+      population: 4500
+      
+    - id: 8
+      name: "Botnang"
+      name_en: "Botnang"
+      population: 14000
+      
+    - id: 9
+      name: "Degerloch"
+      name_en: "Degerloch"
+      population: 18000
+      
+    - id: 10
+      name: "Feuerbach"
+      name_en: "Feuerbach"
+      population: 28000
+      
+    - id: 11
+      name: "Hedelfingen"
+      name_en: "Hedelfingen"
+      population: 11000
+      
+    - id: 12
+      name: "Möhringen"
+      name_en: "Möhringen"
+      population: 35000
+      
+    - id: 13
+      name: "Mühlhausen"
+      name_en: "Mühlhausen"
+      population: 28000
+      
+    - id: 14
+      name: "Münster"
+      name_en: "Münster"
+      population: 6000
+      
+    - id: 15
+      name: "Obertürkheim"
+      name_en: "Obertürkheim"
+      population: 10000
+      
+    - id: 16
+      name: "Plieningen"
+      name_en: "Plieningen"
+      population: 15000
+      
+    - id: 17
+      name: "Sillenbuch"
+      name_en: "Sillenbuch"
+      population: 24000
+      
+    - id: 18
+      name: "Stammheim"
+      name_en: "Stammheim"
+      population: 10000
+      
+    - id: 19
+      name: "Untertürkheim"
+      name_en: "Untertürkheim"
+      population: 20000
+      
+    - id: 20
+      name: "Vaihingen"
+      name_en: "Vaihingen"
+      population: 38000
+      
+    - id: 21
+      name: "Wangen"
+      name_en: "Wangen"
+      population: 29000
+      
+    - id: 22
+      name: "Weilimdorf"
+      name_en: "Weilimdorf"
+      population: 30000
+      
+    - id: 23
+      name: "Zuffenhausen"
+      name_en: "Zuffenhausen"
+      population: 37000
+
+# Configurações específicas por distrito (opcional)
+district_configs:
+  # Distritos centrais - maior peso para transporte público
+  central_districts: [1, 2, 3, 4, 5]
+  
+  # Distritos periféricos - maior peso para áreas verdes
+  peripheral_districts: [7, 11, 14, 15, 16, 18]
+  
+  # Distritos industriais - ajustes específicos
+  industrial_districts: [6, 19, 23]
+
+# Mapeamento de nomes alternativos
+name_mappings:
+  "Stuttgart-Mitte": "Mitte"
+  "Stuttgart-Nord": "Nord" 
+  "Stuttgart-Ost": "Ost"
+  "Stuttgart-Süd": "Süd"
+  "Stuttgart-West": "West"
+  # Adicionar outros mapeamentos conforme necessário
+
+# Configurações de análise populacional
+population_analysis:
+  # Assumir distribuição uniforme dentro do distrito se não houver dados detalhados
+  uniform_distribution: true
+  
+  # Buffer para análise de acessibilidade (metros)
+  analysis_buffer: 50
+  
+  # Resolução da grade populacional (metros)
+  grid_resolution: 100

@@ -1,0 +1,66 @@
+# [CONFIG] OSM extraction filters for QuackOSM
+# Defines which OSM tags to extract for each thematic layer
+roads:
+  highway:
+    - motorway
+    - trunk
+    - primary
+    - secondary
+    - tertiary
+    - residential
+    - service
+    - living_street
+    - unclassified
+
+buildings:
+  building:
+    - "*"
+
+landuse:
+  landuse:
+    - forest
+    - residential
+    - commercial
+    - industrial
+    - farmland
+    - park
+    - retail
+  natural:
+    - water
+    - scrub
+    - grassland
+    - wood
+
+cycle:
+  highway:
+    - cycleway
+  cycleway:
+    - lane
+    - track
+    - opposite
+    - opposite_lane
+
+amenities:
+  amenity:
+    - "*"  # Extract all amenity types - comprehensive coverage
+
+pt_stops:
+  public_transport:
+    - "*"  # All public transport features
+  highway:
+    - bus_stop
+  railway:
+    - platform
+    - station
+    - halt
+    - stop
+    - subway_entrance
+    - tram_stop
+  amenity:
+    - bus_station
+    - taxi
+  # Note: QuackOSM will also extract additional attributes like operator, network, name, ref
+
+boundaries:
+  boundary:
+    - administrative

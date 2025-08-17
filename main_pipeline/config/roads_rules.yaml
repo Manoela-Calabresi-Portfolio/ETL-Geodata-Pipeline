@@ -1,0 +1,25 @@
+# Category mapping rules for roads layer
+motorway:
+  - motorway
+  - motorway_link
+
+primary:
+  - primary
+  - primary_link
+
+secondary:
+  - secondary
+  - secondary_link
+
+tertiary:
+  - tertiary
+  - tertiary_link
+
+residential:
+  - residential
+  - living_street
+  - unclassified
+
+service:
+  - service
+  - track

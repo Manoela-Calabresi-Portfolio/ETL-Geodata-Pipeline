@@ -1,0 +1,79 @@
+# KPI Weights Configuration for Stuttgart Mobility & Walkability Index
+
+# Pesos dos indicadores principais (devem somar 1.0)
+main_categories:
+  public_transport: 0.4    # 40% - Transporte público
+  walkability: 0.35        # 35% - Caminhabilidade  
+  green_access: 0.25       # 25% - Acesso a áreas verdes
+
+# Pesos detalhados dentro de cada categoria
+detailed_weights:
+  
+  # Transporte Público (40% do total)
+  public_transport:
+    high_freq_access: 0.6    # % população ≤ 300m parada alta freq
+    line_diversity: 0.4      # Nº médio de linhas acessíveis
+  
+  # Caminhabilidade (35% do total)  
+  walkability:
+    intersection_density: 0.4  # Densidade de cruzamentos
+    poi_access: 0.6           # % população ≤ 500m de POIs
+  
+  # Áreas Verdes (25% do total)
+  green_access:
+    green_space_access: 1.0   # % população ≤ 500m área verde
+
+# Pesos por tipo de POI (dentro de poi_access)
+poi_weights:
+  education: 0.3        # Escolas
+  healthcare: 0.25      # Hospitais, clínicas
+  food_beverage: 0.2    # Supermercados
+  financial: 0.15       # Bancos
+  community: 0.1        # Centros comunitários
+
+# Configurações de normalização
+normalization:
+  method: "min_max"     # "min_max", "z_score", ou "rank"
+  
+  # Valores de referência para normalização (opcional)
+  reference_values:
+    intersection_density:
+      min: 0
+      max: 50          # cruzamentos por km²
+    
+    high_freq_access:
+      min: 0
+      max: 100         # percentual
+    
+    poi_access:
+      min: 0  
+      max: 100         # percentual
+    
+    green_space_access:
+      min: 0
+      max: 100         # percentual
+    
+    line_diversity:
+      min: 0
+      max: 20          # número de linhas
+
+# Cenários alternativos de pesos (para análise de sensibilidade)
+scenarios:
+  
+  # Cenário focado em transporte público
+  transit_focused:
+    public_transport: 0.6
+    walkability: 0.25
+    green_access: 0.15
+  
+  # Cenário focado em caminhabilidade
+  walkability_focused:
+    public_transport: 0.25
+    walkability: 0.5
+    green_access: 0.25
+  
+  # Cenário equilibrado (padrão)
+  balanced:
+    public_transport: 0.4
+    walkability: 0.35
+    green_access: 0.25

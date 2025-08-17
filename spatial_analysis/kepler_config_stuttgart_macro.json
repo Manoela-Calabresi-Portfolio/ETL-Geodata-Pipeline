@@ -1,0 +1,131 @@
+{
+  "version": "v1",
+  "config": {
+    "visState": {
+      "filters": [
+        {
+          "dataId": "districts",
+          "id": "district-selector",
+          "name": ["district_name"],
+          "type": "multiSelect",
+          "enlarged": false,
+          "value": []
+        }
+      ],
+      "layers": [
+        {
+          "id": "districts-choropleth",
+          "type": "geojson",
+          "config": {
+            "dataId": "districts",
+            "label": "Districts — Green Access Score",
+            "color": [46, 204, 113],
+            "columns": {"geojson": "geometry"},
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.8,
+              "strokeOpacity": 0.4,
+              "thickness": 0.4,
+              "strokeColor": [59, 59, 59],
+              "colorRange": {
+                "name": "Greens",
+                "type": "sequential",
+                "category": "Uber",
+                "colors": ["#e8f5e9","#c8e6c9","#a5d6a7","#81c784","#66bb6a","#4caf50","#1b5e20"]
+              },
+              "strokeColorRange": {"colors": ["#3b3b3b"]},
+              "radius": 10,
+              "filled": true
+            },
+            "textLabel": [
+              {
+                "field": {"name": "district_name","type": "string"},
+                "color": [40,40,40],
+                "size": 11,
+                "offset": [0, 0],
+                "anchor": "center",
+                "alignment": "center"
+              }
+            ]
+          },
+          "visualChannels": {
+            "colorField": {"name": "green_access_score", "type": "real"},
+            "colorScale": "quantize"
+          }
+        },
+        {
+          "id": "pt-lines",
+          "type": "geojson",
+          "config": {
+            "dataId": "pt_lines",
+            "label": "PT Lines",
+            "color": [14, 165, 233],
+            "columns": {"geojson": "geometry"},
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.7,
+              "strokeOpacity": 0.7,
+              "thickness": 2.5,
+              "strokeColor": [14, 165, 233],
+              "filled": false
+            }
+          }
+        },
+        {
+          "id": "pt-stops",
+          "type": "geojson",
+          "config": {
+            "dataId": "stops",
+            "label": "PT Stops",
+            "color": [37, 99, 235],
+            "columns": {"geojson": "geometry"},
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.9,
+              "strokeOpacity": 0,
+              "radius": 3,
+              "filled": true
+            }
+          },
+          "visualChannels": {
+            "colorField": {"name": "ridership", "type": "real"},
+            "colorScale": "quantize"
+          }
+        }
+      ],
+      "interactionConfig": {
+        "tooltip": {
+          "fieldsToShow": {
+            "districts": [
+              {"name":"district_name","format":null},
+              {"name":"green_access_score","format":".1f"},
+              {"name":"green_area_km2","format":".2f"},
+              {"name":"population","format":null}
+            ],
+            "pt_lines": [
+              {"name":"name","format":null},
+              {"name":"mode","format":null}
+            ],
+            "stops": [
+              {"name":"name","format":null},
+              {"name":"mode","format":null},
+              {"name":"ridership","format":null}
+            ]
+          },
+          "enabled": true
+        }
+      }
+    },
+    "mapState": {
+      "latitude": 48.7758,
+      "longitude": 9.1829,
+      "zoom": 9.5,
+      "pitch": 0,
+      "bearing": 0
+    },
+    "mapStyle": {
+      "styleType": "dark",
+      "visibleLayerGroups": {"label": false, "road": false, "border": false, "building": false, "water": false}
+    }
+  }
+}

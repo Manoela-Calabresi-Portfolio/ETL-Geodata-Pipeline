@@ -1,0 +1,10 @@
+geopandas
+shapely
+pyproj
+pandas
+numpy
+matplotlib
+contextily
+plotly
+requests
+h3==3.7.6

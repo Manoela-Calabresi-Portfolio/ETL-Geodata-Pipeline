@@ -1,0 +1,280 @@
+# [CONFIG] Comprehensive Amenities Categorization - Option C
+# Separates Infrastructure, Services, and Facilities based on OSM standards
+# Total coverage: ~220 amenity types from Stuttgart data
+
+# === CORE SERVICES (Primary Public Services) ===
+education:
+  - school
+  - university
+  - college
+  - kindergarten
+  - childcare
+  - nursery_home
+  - music_school
+  - language_school
+  - prep_school
+  - driving_school
+  - dancing_school
+  - flight_school
+  - swimming_school
+  - trade_school
+  - academy
+  - education
+  - training
+
+healthcare:
+  - hospital
+  - clinic
+  - doctors
+  - dentist
+  - pharmacy
+  - veterinary
+  - nursing_home
+  - physiotherapist
+  - chiropody
+  - first_aid
+
+financial:
+  - bank
+  - atm
+  - bureau_de_change
+  - money_transfer
+  - financial_institution
+  - stock_exchange
+  - safe_deposit
+
+public_services:
+  - post_office
+  - post_depot
+  - post_partner
+  - post_box
+  - letter_box
+  - parcel_locker
+  - parcel_mail_in
+  - library
+  - mobile_library
+  - library_dropoff
+  - public_bookcase
+  - toy_library
+  - townhall
+  - courthouse
+  - police
+  - fire_station
+  - customs
+  - lost_property_office
+  - administration
+  - public_building
+  - civic
+  - polling_station
+
+emergency:
+  - hospital
+  - fire_station
+  - police
+  - first_aid
+  - life_boat
+
+# === FOOD & BEVERAGE (Hospitality) ===
+food_beverage:
+  - restaurant
+  - cafe
+  - bar
+  - pub
+  - fast_food
+  - ice_cream
+  - biergarten
+  - nightclub
+  - hookah_lounge
+  - karaoke_bar
+  - karaoke_box
+  - canteen
+  - canteen_kitchen
+  - food_court
+  - food_sharing
+  - brothel
+  - stripclub
+  - swingerclub
+  - love_hotel
+  - "ice_cream;crepe"
+  - "cafe;bar"
+
+# === TRANSPORTATION & MOBILITY ===
+transport:
+  - fuel
+  - charging_station
+  - device_charging_station
+  - car_wash
+  - motorcycle_wash
+  - car_rental
+  - motorcycle_rental
+  - bicycle_rental
+  - boat_rental
+  - car_sharing
+  - taxi
+  - bus_station
+  - ferry_terminal
+  - vehicle_inspection
+  - driving_school
+  - flight_school
+  - dive_centre
+  - mobilty_hub
+  - mobility_hub
+
+parking:
+  - parking
+  - parking_space
+  - parking_entrance
+  - bicycle_parking
+  - motorcycle_parking
+  - kick-scooter_parking
+  - e_scooter_parking
+  - scooter_parking
+  - small_electric_vehicle_parking
+  - tourist_bus_parking
+  - dog_parking
+
+# === COMMUNITY & CULTURE ===
+community:
+  - community_centre
+  - social_facility
+  - social_centre
+  - place_of_worship
+  - parish_hall
+  - vicarage
+  - theatre
+  - cinema
+  - arts_centre
+  - music_venue
+  - events_venue
+  - events_centre
+  - exhibition_centre
+  - conference_centre
+  - concert_hall
+  - entertainment_center
+  - planetarium
+  - studio
+  - clubhouse
+  - fraternity
+  - coworking_space
+  - co-working
+  - workshop
+  - dojo
+  - meditation_centre
+
+# === URBAN INFRASTRUCTURE (Street Furniture) ===
+street_furniture:
+  - bench
+  - shelter
+  - clock
+  - fountain
+  - drinking_water
+  - water_point
+  - lounger
+  - bbq
+  - baking_oven
+  - smoking_area
+  - ashtray
+  - bulletin_board
+  - binoculars
+  - intercom
+  - bell
+  - column
+  - meeting point
+
+waste_management:
+  - waste_basket
+  - recycling
+  - waste_disposal
+  - waste_transfer_station
+  - grit_bin
+  - vacuum_cleaner
+  - compressed_air
+
+utilities:
+  - vending_machine
+  - telephone
+  - ticket_validator
+  - photo_booth
+  - internet_cafe
+  - public_bath
+  - toilets
+  - shower
+  - dressing_room
+  - luggage_locker
+  - locker
+  - give_box
+  - freeshop
+  - trolley_bay
+  - validator
+  - "vending_machine;waste_basket"
+  - "waste_basket;vending_machine"
+
+# === COMMERCIAL & RETAIL ===
+commercial:
+  - marketplace
+  - commercial
+  - office
+  - reception_desk
+  - check_in
+
+# === RECREATION & LEISURE ===
+recreation:
+  - casino
+  - gambling
+  - sport
+  - traffic_park
+  - game_feeding
+  - wildlife_feeding
+  - feeding_place
+  - watering_place
+  - nest_box
+
+# === SPECIALIZED SERVICES ===
+animal_services:
+  - veterinary
+  - animal_shelter
+  - animal_boarding
+  - animal_training
+  - animal_breeding
+  - stables
+
+construction_logistics:
+  - weighbridge
+  - building_yard
+  - loading_dock
+  - construction
+  - sanitary_dump_station
+  - boat_storage
+
+funeral_services:
+  - grave_yard
+  - funeral_hall
+  - crematorium
+  - mortuary
+
+research_education:
+  - research_institute
+  - archive
+  - surveyor
+
+accommodation:
+  - dormitory
+  - refugee_site
+
+# === MAINTENANCE & REPAIR ===
+maintenance:
+  - bicycle_repair_station
+  - driver_training
+  - outdoor_seating
+
+# === UNCATEGORIZED/SPECIAL ===
+other:
+  - hunting_stand
+  - fixme
+  - vacant
+  - disused
+  - public
+  - water
+  - baby_hatch
+  - spa
+  - Wanderwegweiser
