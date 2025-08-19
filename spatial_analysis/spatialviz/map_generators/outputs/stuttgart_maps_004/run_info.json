@@ -1,0 +1,15 @@
+{
+  "run_number": 4,
+  "timestamp": "2025-08-17T11:54:47.488710",
+  "output_directory": "..\\outputs\\stuttgart_maps_004",
+  "total_maps": 18,
+  "features": [
+    "Area clipping to city boundaries",
+    "Pastel and earthy color schemes",
+    "Legends on all maps",
+    "Choropleth analysis maps",
+    "Bivariate choropleth maps",
+    "District atlas maps",
+    "Close-up analysis maps"
+  ]
+}

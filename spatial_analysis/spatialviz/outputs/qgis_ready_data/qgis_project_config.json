@@ -1,0 +1,102 @@
+{
+  "project_name": "Stuttgart Urban Analysis - QGIS",
+  "description": "Complete dataset to recreate land use and population density maps",
+  "crs": "EPSG:4326",
+  "layers": [
+    {
+      "name": "01 - Districts with Population",
+      "file": "01_districts_population.geojson",
+      "type": "polygon",
+      "description": "Administrative districts with population data for density mapping",
+      "style_suggestions": {
+        "population_density": {
+          "type": "graduated",
+          "column": "pop_density",
+          "colors": "YlOrRd",
+          "classes": 5,
+          "mode": "quantile"
+        }
+      }
+    },
+    {
+      "name": "02 - Land Use Categories",
+      "file": "02_landuse_categorized.geojson",
+      "type": "polygon",
+      "description": "Categorized land use areas (forest, residential, industrial, etc.)",
+      "style_suggestions": {
+        "landuse": {
+          "type": "categorized",
+          "column": "landuse",
+          "colors": {
+            "forest": "#4A5D4A",
+            "farmland": "#7FB069",
+            "residential": "#F5F5DC",
+            "industrial": "#D3D3D3",
+            "commercial": "#FFB6C1"
+          }
+        }
+      }
+    },
+    {
+      "name": "03 - Road Network",
+      "file": "03_roads_categorized.geojson",
+      "type": "line",
+      "description": "Categorized road network",
+      "style_suggestions": {
+        "color": "#8B7355",
+        "width": 0.5,
+        "alpha": 0.3
+      }
+    },
+    {
+      "name": "04 - PT Stops",
+      "file": "04_pt_stops_categorized.geojson",
+      "type": "point",
+      "description": "Public transport stops",
+      "style_suggestions": {
+        "color": "#C3423F",
+        "size": 3,
+        "alpha": 0.8
+      }
+    },
+    {
+      "name": "05 - City Boundary",
+      "file": "05_city_boundary.geojson",
+      "type": "polygon",
+      "description": "City boundary for reference and clipping",
+      "style_suggestions": {
+        "fill": "transparent",
+        "border": "#666666",
+        "width": 3,
+        "alpha": 0.4
+      }
+    }
+  ],
+  "map_templates": [
+    {
+      "name": "Land Use Map",
+      "description": "Land use + Roads + PT stops",
+      "layers_order": [
+        "01 - Districts with Population",
+        "02 - Land Use Categories",
+        "03 - Road Network",
+        "04 - PT Stops",
+        "05 - City Boundary"
+      ],
+      "title": "Stuttgart — Land Use + Roads + PT Stops",
+      "subtitle": "Stuttgart — Flächennutzung + Straßen + ÖPNV-Haltestellen"
+    },
+    {
+      "name": "Population Density Map",
+      "description": "Population density + Roads + PT stops",
+      "layers_order": [
+        "01 - Districts with Population",
+        "03 - Road Network",
+        "04 - PT Stops",
+        "05 - City Boundary"
+      ],
+      "title": "Stuttgart — Population Density + Roads + PT Stops",
+      "subtitle": "Stuttgart — Bevölkerungsdichte + Straßen + ÖPNV-Haltestellen"
+    }
+  ]
+}

@@ -36,6 +36,13 @@ ETL-Geodata-Pipeline/
 │   ├── areas/                  # 🟨 City-Specific Configurations
 │   │   └── stuttgart.yaml      # Stuttgart parameters
 │   └── EXECUTION_ORDER.md      # 🔻 Detailed execution guide
+├── spatial_analysis/           # 🔺 Multi-City Analysis Pipeline
+│   ├── config/                 # 🟪 Analysis configuration
+│   ├── scripts/                # 🟣 Reusable pipeline (1,2,3)
+│   ├── data/                   # 🟨 Multi-city data structure
+│   │   └── stuttgart/          # City-specific data
+│   ├── areas/                  # 🟨 Geographic definitions
+│   └── spatialviz/             # 🟣 All visualization & outputs
 ├── data_final/                 # 🔺 Processed Data by City
 │   └── stuttgart/
 │       ├── raw/               # Original OSM PBF files
@@ -47,6 +54,7 @@ ETL-Geodata-Pipeline/
 ├── docs/                      # 🟪 Documentation
 │   ├── README_FINAL.md        # Comprehensive documentation
 │   └── requirements.txt       # Python dependencies
+├── test_data/                 # 🔺 Test data for smoke testing
 └── archive/                   # 🟣 Archived Systems
     └── stuttgart-etl-old/     # Previous system backup
 ```
@@ -418,21 +426,69 @@ python spatial_analysis/scripts/1_data_collection.py
 
 ---
 
+## 🔺 Multi-City Analysis Pipeline
+
+### Advanced Urban Mobility & Walkability Analysis
+A scalable, multi-city analysis pipeline that processes geospatial data to generate standardized KPIs for transport, walkability, and green space accessibility across multiple cities.
+
+**Location**: `spatial_analysis/`
+
+**Architecture**:
+- 🔺 **Modular Pipeline**: 3-stage analysis (data collection → KPI calculation → visualization)
+- 🔺 **Multi-City Ready**: Same scripts work for any city with different configurations
+- 🔺 **Scalable Structure**: Easy addition of new cities (Paris, Berlin, etc.)
+- 🔺 **Standardized KPIs**: Consistent methodology across all cities
+
+**Pipeline Stages**:
+1. 🟣 **Data Collection** (`1_data_collection.py`): OSM + GTFS + boundaries
+2. 🟪 **KPI Calculation** (`2_kpi_calculation.py`): Transport, walkability, green access
+3. 🟣 **Visualization** (`3_visualization.py`): Maps, rankings, dashboards
+
+**Multi-City Structure**:
+```
+spatial_analysis/
+├── data/                       # Multi-city data
+│   ├── stuttgart/              # Current city
+│   ├── paris/                  # Future city
+│   └── berlin/                 # Future city
+├── areas/                      # Geographic definitions
+└── spatialviz/                 # All outputs
+```
+
+**Quick Start**:
+```bash
+# Install dependencies
+pip install -r spatial_analysis/requirements.txt
+
+# Run full pipeline
+python spatial_analysis/scripts/1_data_collection.py
+python spatial_analysis/scripts/2_kpi_calculation.py
+python spatial_analysis/scripts/3_visualization.py
+
+# Modular execution
+python spatial_analysis/scripts/1_data_collection.py --gtfs-only
+```
+
+**See**: `spatial_analysis/QUICKSTART.md` for detailed instructions.
+
+---
+
 ## 🔻 Future Enhancements (Phase 2)
 
 ### Planned Features
-1. **DuckDB Integration** - SQL analytics on geodata
-2. **Web Dashboard** - Interactive data exploration
-3. **API Endpoints** - Programmatic data access
-4. **Automated Updates** - Scheduled OSM data refresh
-5. **Multi-City Analysis** - Cross-city comparisons
-6. **Advanced Mobility Metrics** - Complete walkability scoring system
+1. 🔺 **Multi-City Expansion** - Paris, Berlin, and more cities
+2. 🔺 **Advanced KPI System** - Machine learning-based indicators
+3. 🔺 **Interactive Web Dashboard** - Real-time analysis exploration
+4. 🔺 **Automated Data Updates** - Scheduled OSM and GTFS refresh
+5. 🔺 **Cross-City Benchmarking** - Comparative urban analysis
+6. 🔺 **API Development** - RESTful endpoints for external access
 
 ### Scalability Roadmap
-- **Database Backend**: Transition from files to database
-- **Cloud Deployment**: AWS/GCP deployment options
-- **Real-time Processing**: Stream processing capabilities
-- **Machine Learning**: Automated categorization improvements
+- 🔺 **Multi-City Support** - Standardized analysis across cities
+- 🔺 **Database Backend** - Transition from files to database
+- 🔺 **Cloud Deployment** - AWS/GCP deployment options
+- 🔺 **Real-time Processing** - Live data integration
+- 🔺 **Machine Learning** - Automated KPI optimization
 
 ---
 
@@ -478,7 +534,7 @@ For questions, issues, or contributions:
 3. Search existing issues
 4. Create new issue with detailed description
 
-**Project Status**: 🔺 Phase 1 Complete - Production Ready
+**Project Status**: 🔺 Phase 1 Complete - Multi-City Pipeline Ready
 
 ---
 
