@@ -25,7 +25,7 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 ## 🔺 Visual Outputs Showcase
 
 ### 🔺 Stuttgart Enhanced Mobility & Infrastructure Dashboard
-![Stuttgart Enhanced Dashboard](map_examples/17_overall_score.png)
+![Stuttgart Enhanced Dashboard](map_examples/stuttgart_enhanced_dashboard copy.png)
 *Comprehensive mobility analysis showing overall scores, public transport density, walkability, amenity density, green space ratio, and district areas across Stuttgart's districts*
 
 ### 🔺 Access to Essential Services
@@ -33,12 +33,12 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 *H3 hexagonal grid visualization of essential services accessibility within 10-minute walking distance*
 
 ### 🔺 Land Use, Roads & Public Transport Overview
-![Land Use Overview](map_examples/04_pt_modal_gravity_h3.png)
-*Public transport modal gravity analysis showing transport accessibility patterns across Stuttgart*
+![Land Use Overview](map_examples/01_overview_landuse_roads_pt.png)
+*Comprehensive overview of land use, road networks, and public transport infrastructure across Stuttgart*
 
-### 🔺 Park Accessibility Analysis
-![Park Access Time](map_examples/08_park_access_time_h3.png)
-*Walking time to nearest parks using H3 hexagonal grid system*
+### 🔺 Walkability Score Analysis
+![Walkability Score](map_examples/stuttgart_walkability_score_enhanced.png)
+*Enhanced walkability scoring analysis showing pedestrian-friendly areas and accessibility patterns across Stuttgart*
 
 ### 🔺 Service Diversity Distribution
 ![Service Diversity](map_examples/07_service_diversity_h3.png)
