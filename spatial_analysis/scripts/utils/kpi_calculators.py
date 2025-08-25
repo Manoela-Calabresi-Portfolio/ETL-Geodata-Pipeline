@@ -185,10 +185,13 @@ def aggregate_district_kpis(config: Dict[str, Any], kpi_weights: Dict[str, float
         # Add rankings
         all_kpis = add_rankings(all_kpis)
         
-        # Save aggregated results
+        # Save aggregated results to original location
         output_path = Path("data/results/district_kpis_aggregated.parquet")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         all_kpis.to_parquet(output_path)
+        
+        # NEW: Export normalized KPIs for spatialviz visualization
+        export_normalized_kpis_for_spatialviz(all_kpis)
         
         logger.info(f"Aggregated KPIs for {len(all_kpis)} districts")
         return all_kpis
@@ -196,6 +199,108 @@ def aggregate_district_kpis(config: Dict[str, Any], kpi_weights: Dict[str, float
     except Exception as e:
         logger.error(f"Error aggregating district KPIs: {e}")
         return pd.DataFrame()
+
+def export_normalized_kpis_for_spatialviz(district_kpis_gdf: pd.DataFrame):
+    """
+    Export KPIs in normalized long format for spatialviz visualization
+    
+    Args:
+        district_kpis_gdf: DataFrame with district KPIs
+    """
+    try:
+        logger.info("Exporting normalized KPIs for spatialviz...")
+        
+        # Import required libraries
+        import geopandas as gpd
+        from shapely import wkt
+        
+        # Convert to GeoDataFrame if it's not already
+        if not isinstance(district_kpis_gdf, gpd.GeoDataFrame):
+            # Check if geometry column exists and convert WKT to geometry
+            if 'geometry' in district_kpis_gdf.columns:
+                district_kpis_gdf['geometry'] = district_kpis_gdf['geometry'].apply(wkt.loads)
+                district_kpis_gdf = gpd.GeoDataFrame(district_kpis_gdf, geometry='geometry')
+            else:
+                logger.warning("No geometry column found, skipping spatialviz export")
+                return
+        
+        # Ensure CRS is set (assuming EPSG:25832 based on the data)
+        if district_kpis_gdf.crs is None:
+            district_kpis_gdf.set_crs('EPSG:25832', inplace=True)
+        
+        # Convert to WGS84 (EPSG:4326) for Kepler/Contextily compatibility
+        district_kpis_gdf = district_kpis_gdf.to_crs(4326)
+        
+        # Define KPI columns to export
+        kpi_columns = [
+            "amenities_count", 
+            "area_km2", 
+            "green_landuse_pct", 
+            "service_density", 
+            "pt_stop_density", 
+            "cycle_infra_density", 
+            "population_density"
+        ]
+        
+        # Filter to only include districts with geometry and KPI data
+        valid_districts = district_kpis_gdf[
+            district_kpis_gdf['geometry'].notna() & 
+            district_kpis_gdf['STADTBEZIRKNAME'].notna()
+        ].copy()
+        
+        if valid_districts.empty:
+            logger.warning("No valid districts with geometry found")
+            return
+        
+        # Melt KPI columns into long format
+        id_vars = ["STADTBEZIRKNAME", "geometry"]
+        value_vars = [col for col in kpi_columns if col in valid_districts.columns]
+        
+        if not value_vars:
+            logger.warning("No KPI columns found in data")
+            return
+        
+        # Create long format DataFrame
+        kpis_long = valid_districts.melt(
+            id_vars=id_vars,
+            value_vars=value_vars,
+            var_name="kpi_name",
+            value_name="value"
+        )
+        
+        # Convert back to GeoDataFrame
+        kpis_long_gdf = gpd.GeoDataFrame(kpis_long, geometry="geometry", crs=4326)
+        
+        # Create output directory
+        out_dir = Path("../../spatialviz/outputs/stuttgart_analysis")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save as GeoParquet
+        parquet_path = out_dir / "stuttgart_kpis.parquet"
+        kpis_long_gdf.to_parquet(parquet_path, index=False)
+        
+        # Optional: Save as GeoJSON for debugging
+        geojson_path = out_dir / "stuttgart_kpis.geojson"
+        kpis_long_gdf.to_file(geojson_path, driver="GeoJSON")
+        
+        # Print diagnostic information
+        logger.info(f"✅ Exported normalized KPIs to {parquet_path}")
+        logger.info(f"✅ Exported GeoJSON for debugging to {geojson_path}")
+        logger.info(f"✅ Total rows: {len(kpis_long_gdf)}")
+        logger.info(f"✅ Districts: {len(valid_districts)}")
+        logger.info(f"✅ KPIs per district: {len(value_vars)}")
+        
+        # Print value ranges for each KPI
+        for kpi in value_vars:
+            kpi_data = kpis_long_gdf[kpis_long_gdf["kpi_name"] == kpi]["value"]
+            if not kpi_data.empty:
+                vmin, vmax = kpi_data.min(), kpi_data.max()
+                logger.info(f"  📊 {kpi}: min={vmin:.2f}, max={vmax:.2f}")
+        
+    except Exception as e:
+        logger.error(f"Error exporting normalized KPIs for spatialviz: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 # Helper functions for data loading and calculations
 

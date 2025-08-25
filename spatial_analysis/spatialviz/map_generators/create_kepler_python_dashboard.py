@@ -112,19 +112,53 @@ def load_all_layers():
     """Load all 18 layers (11 existing + 7 new choropleth maps) from their respective locations"""
     all_layers = {}
     
-    # Load basic infrastructure layers
+        # Load basic infrastructure layers
     basic_dir = Path("../outputs/maps/kepler_data")
     basic_files = [
         "01_city_boundary.geojson",
-        "02_districts.geojson", 
+        "02_districts.geojson",
         "03_roads.geojson",
         "04_pt_stops.geojson",
         "05_landuse.geojson",
         "06_green_areas.geojson"
     ]
     
+    # Use official processed district boundaries instead of kepler_data
+    districts_file = Path("../../data/stuttgart/processed/stadtbezirke.parquet")
+    if districts_file.exists():
+        try:
+            districts_gdf = gpd.read_parquet(districts_file)
+            all_layers["02_districts"] = districts_gdf
+            print(f"  ✅ 02_districts: {len(districts_gdf)} features (from processed data)")
+        except Exception as e:
+            print(f"  ❌ Error loading processed districts: {e}")
+            # Fallback to kepler_data
+            districts_file = basic_dir / "02_districts.geojson"
+            if districts_file.exists():
+                try:
+                    gdf = gpd.read_file(districts_file)
+                    all_layers["02_districts"] = gdf
+                    print(f"  ✅ 02_districts: {len(gdf)} features (fallback from kepler_data)")
+                except Exception as e2:
+                    print(f"  ❌ Fallback districts failed: {e2}")
+    else:
+        print(f"  ⚠️ Processed districts not found: {districts_file}")
+        # Use kepler_data as fallback
+        districts_file = basic_dir / "02_districts.geojson"
+        if districts_file.exists():
+            try:
+                gdf = gpd.read_file(districts_file)
+                all_layers["02_districts"] = gdf
+                print(f"  ✅ 02_districts: {len(gdf)} features (fallback from kepler_data)")
+            except Exception as e:
+                print(f"  ❌ Fallback districts failed: {e}")
+    
     print("🔺 Loading basic infrastructure layers...")
     for filename in basic_files:
+        # Skip districts since we loaded them from processed data
+        if filename == "02_districts.geojson":
+            continue
+            
         filepath = basic_dir / filename
         if filepath.exists():
             try:
@@ -188,47 +222,38 @@ def load_all_layers():
     else:
         print("  ⚠️ No folder with H3 layers found")
     
-    # Load choropleth maps from stuttgart_kpis.csv
-    print("🔺 Loading choropleth maps from stuttgart_kpis.csv...")
-    kpis_file = Path("../outputs/stuttgart_analysis/stuttgart_kpis.csv")
+    # Load choropleth maps from stuttgart_kpis.parquet
+    print("🔺 Loading choropleth maps from stuttgart_kpis.parquet...")
+    kpis_file = Path("../outputs/stuttgart_analysis/stuttgart_kpis.parquet")
     if kpis_file.exists():
         try:
-            # Read the KPIs data as a regular DataFrame first
-            import pandas as pd
-            kpis_df = pd.read_csv(kpis_file)
-            print(f"  ✅ Loaded KPIs data: {len(kpis_df)} districts")
+            kpis_gdf = gpd.read_parquet(kpis_file)
+            print(f"  ✅ Loaded KPI GeoParquet: {len(kpis_gdf)} rows; CRS={kpis_gdf.crs}")
             
-            # Convert geometry column from WKT to GeoDataFrame
-            from shapely import wkt
-            kpis_df['geometry'] = kpis_df['geometry'].apply(wkt.loads)
-            kpis_gdf = gpd.GeoDataFrame(kpis_df, geometry='geometry', crs='EPSG:25832')
-            
-            # Create individual choropleth layers
+            # Build choropleth layers by filtering on kpi_name
             choropleth_layers = {
-                "18_amenity_density": ("amenities_count", "Amenity Density"),
-                "19_district_area": ("area_km2", "District Area (km²)"),
-                "20_green_space_ratio": ("green_landuse_pct", "Green Space Ratio"),
-                "21_mobility_score": ("service_density", "Mobility Score"),
-                "22_pt_density": ("pt_stop_density", "PT Density"),
-                "23_walkability_score": ("cycle_infra_density", "Walkability Score"),
-                "24_overall_score": ("population_density", "Overall Score")
+                "18_amenity_density": "amenities_count",
+                "19_district_area": "area_km2",
+                "20_green_space_ratio": "green_landuse_pct",
+                "21_mobility_score": "service_density",
+                "22_pt_density": "pt_stop_density",
+                "23_walkability_score": "cycle_infra_density",
+                "24_overall_score": "population_density"
             }
             
-            for layer_name, (column, title) in choropleth_layers.items():
-                if column in kpis_gdf.columns:
-                    # Create a copy with the specific column for visualization
-                    gdf_copy = kpis_gdf.copy()
-                    # Rename the column to a standard name for consistent styling
-                    gdf_copy = gdf_copy.rename(columns={column: "value"})
-                    all_layers[layer_name] = gdf_copy
-                    print(f"  ✅ {layer_name}: {title} ({column})")
+            for layer_name, kpi in choropleth_layers.items():
+                gdf_layer = kpis_gdf[kpis_gdf["kpi_name"] == kpi].copy()
+                if not gdf_layer.empty:
+                    all_layers[layer_name] = gdf_layer
+                    vmin, vmax = gdf_layer["value"].min(), gdf_layer["value"].max()
+                    print(f"  ✅ {layer_name}: {kpi} ({len(gdf_layer)} features) → min={vmin:.2f}, max={vmax:.2f}")
                 else:
-                    print(f"  ⚠️ Column {column} not found in KPIs data")
+                    print(f"  ⚠️ No data for {layer_name} ({kpi})")
                     
         except Exception as e:
-            print(f"  ❌ Error loading KPIs data: {e}")
+            print(f"  ❌ Error loading KPI GeoParquet: {e}")
     else:
-        print(f"  ⚠️ KPIs file not found: {kpis_file}")
+        print(f"  ⚠️ KPI Parquet not found: {kpis_file}")
     
     return all_layers
 
@@ -781,15 +806,33 @@ def create_layer_png(gdf, layer_name, output_file, basic_colors, h3_colors, colo
     
     # Load city boundary for clipping and extent
     try:
-        city_boundary_file = Path("../outputs/maps/kepler_data/01_city_boundary.geojson")
+        # Use the official processed district boundaries
+        city_boundary_file = Path("../../data/stuttgart/processed/stadtbezirke.parquet")
         if city_boundary_file.exists():
-            city_boundary = gpd.read_file(city_boundary_file)
+            city_boundary = gpd.read_parquet(city_boundary_file)
+            # Get the overall city boundary by dissolving all districts
+            city_boundary = city_boundary.dissolve()
             city_bounds = city_boundary.total_bounds
+            print(f"  ✅ Loaded city boundary from processed districts: {city_boundary_file}")
         else:
-            city_bounds = None
+            # Fallback to kepler_data if processed file not found
+            fallback_file = Path("../outputs/maps/kepler_data/01_city_boundary.geojson")
+            if fallback_file.exists():
+                city_boundary = gpd.read_file(fallback_file)
+                city_bounds = city_boundary.total_bounds
+                print(f"  ⚠️ Using fallback city boundary from kepler_data: {fallback_file}")
+            else:
+                city_bounds = None
+                print(f"  ⚠️ No city boundary file found")
     except Exception as e:
         print(f"⚠️ City boundary loading failed for {layer_name}: {e}")
         city_bounds = None
+    
+    # Add Carto Light basemap FIRST (before any data plotting)
+    try:
+        ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.Carto.LightNoLabels)
+    except Exception as e:
+        print(f"⚠️ Basemap skipped for {layer_name}: {e}")
     
     # Determine layer type and styling
     if layer_name in basic_colors:
@@ -910,25 +953,15 @@ def create_layer_png(gdf, layer_name, output_file, basic_colors, h3_colors, colo
         ax.set_xlim(city_bounds[0], city_bounds[2])
         ax.set_ylim(city_bounds[1], city_bounds[3])
         
-        # Draw city boundary outline in black (less prominent for choropleth maps)
-        if any(keyword in layer_name for keyword in ['18_', '19_', '20_', '21_', '22_', '23_', '24_']):
-            # For choropleth maps, use a subtle boundary
-            city_boundary.boundary.plot(ax=ax, color='black', linewidth=1, alpha=0.6)
-        else:
-            # For other maps, use the standard boundary
-            city_boundary.boundary.plot(ax=ax, color='black', linewidth=2, alpha=0.8)
+        # Draw city boundary outline on ALL maps for consistency
+        # This ensures all maps have the same scale and are centered
+        city_boundary.boundary.plot(ax=ax, color='black', linewidth=1.5, alpha=0.8)
     
     # Remove axes
     ax.axis('off')
     
     # Add a subtle background
     ax.set_facecolor('#f8f9fa')
-    
-    # Add Carto Light basemap
-    try:
-        ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.Carto.LightNoLabels)
-    except Exception as e:
-        print(f"⚠️ Basemap skipped for {layer_name}: {e}")
     
     # Save the plot
     plt.tight_layout()

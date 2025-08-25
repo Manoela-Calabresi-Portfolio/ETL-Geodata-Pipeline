@@ -12,6 +12,9 @@
 *.gpkg
 *.html
 
+# System and configuration files
+AI_SYSTEM_PROMPT.md
+
 # Specific directories with large data
 pipeline/areas/*/data_final/raw/
 pipeline/areas/*/data_final/staging/

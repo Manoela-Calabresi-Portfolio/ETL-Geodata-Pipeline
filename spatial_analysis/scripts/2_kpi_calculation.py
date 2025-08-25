@@ -37,7 +37,7 @@ def main():
     parser.add_argument('--transport-only', action='store_true', help='Calculate only transport KPIs')
     parser.add_argument('--walkability-only', action='store_true', help='Calculate only walkability KPIs')
     parser.add_argument('--green-only', action='store_true', help='Calculate only green area KPIs')
-    parser.add_argument('--config', default='config/analysis_config.yaml', help='Config file path')
+    parser.add_argument('--config', default='../config/analysis_config.yaml', help='Config file path')
     
     args = parser.parse_args()
     

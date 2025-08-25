@@ -14,6 +14,7 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 - **🟪 Dual Visualization**: Both clean and detailed map generation
 - **🟪 Efficient Processing**: Uses QuackOSM for fast OSM data extraction
 - **🟪 Clean Architecture**: Modular design with clear separation of concerns
+- **🟪 Optimized Storage**: Comprehensive .gitignore prevents large files from cluttering repository
 
 ---
 
@@ -39,10 +40,16 @@ ETL-Geodata-Pipeline/
 ├── spatial_analysis/           # 🔺 Multi-City Analysis Pipeline
 │   ├── config/                 # 🟪 Analysis configuration
 │   ├── scripts/                # 🟣 Reusable pipeline (1,2,3)
+│   │   ├── 1_data_collection.py    # Data collection & processing
+│   │   ├── 2_kpi_calculation.py    # KPI computation
+│   │   └── 3_visualization.py      # Map generation & dashboards
 │   ├── data/                   # 🟨 Multi-city data structure
 │   │   └── stuttgart/          # City-specific data
 │   ├── areas/                  # 🟨 Geographic definitions
 │   └── spatialviz/             # 🟣 All visualization & outputs
+│       ├── map_generators/     # Map creation scripts
+│       ├── outputs/            # Generated maps & dashboards
+│       └── utils/              # Visualization utilities
 ├── data_final/                 # 🔺 Processed Data by City
 │   └── stuttgart/
 │       ├── raw/               # Original OSM PBF files
@@ -55,8 +62,9 @@ ETL-Geodata-Pipeline/
 │   ├── README_FINAL.md        # Comprehensive documentation
 │   └── requirements.txt       # Python dependencies
 ├── test_data/                 # 🔺 Test data for smoke testing
-└── archive/                   # 🟣 Archived Systems
-    └── stuttgart-etl-old/     # Previous system backup
+├── archive/                   # 🟣 Archived Systems
+│   └── stuttgart-etl-old/     # Previous system backup
+└── .gitignore                 # 🟪 Comprehensive file filtering
 ```
 
 ---
@@ -79,6 +87,7 @@ ETL-Geodata-Pipeline/
 2. **Install Dependencies**
    ```bash
    pip install -r docs/requirements.txt
+   pip install -r spatial_analysis/requirements.txt
    ```
 
 3. **Verify Installation**
@@ -359,6 +368,7 @@ Map Generation → PNG Visualizations
 - **Configuration-Driven**: No hardcoded city parameters
 - **Error Handling**: Graceful failure with detailed logging
 - **Documentation**: Comprehensive guides and examples
+- **Repository Optimization**: Comprehensive .gitignore prevents large files from cluttering git
 
 ---
 
@@ -534,8 +544,8 @@ For questions, issues, or contributions:
 3. Search existing issues
 4. Create new issue with detailed description
 
-**Project Status**: 🔺 Phase 1 Complete - Multi-City Pipeline Ready
+**Project Status**: 🔺 Phase 1 Complete - Multi-City Pipeline Ready & Repository Optimized
 
 ---
 
-*Last Updated: 2024-12-19 - Version 1.0.0*
+*Last Updated: 2024-12-19 - Version 1.1.0*
