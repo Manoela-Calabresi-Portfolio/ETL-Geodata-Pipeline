@@ -12,6 +12,9 @@
 *.gpkg
 *.html
 
+# Exception: Allow showcase images in map_examples folder
+!map_examples/*.png
+
 # System and configuration files
 AI_SYSTEM_PROMPT.md
 
