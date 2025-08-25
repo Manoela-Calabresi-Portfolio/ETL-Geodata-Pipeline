@@ -25,6 +25,7 @@ pipeline/areas/*/data_final/processed/
 pipeline/areas/*/data_final/maps/
 pipeline/data/staging/
 pipeline/data/raw/
+archive/
 archive/backups/
 cache/
 spatial_analysis/data/raw/
