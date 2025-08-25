@@ -25,7 +25,7 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 ## 🔺 Visual Outputs Showcase
 
 ### 🔺 Stuttgart Enhanced Mobility & Infrastructure Dashboard
-![Stuttgart Enhanced Dashboard](map_examples/stuttgart_enhanced_dashboard copy.png)
+![Stuttgart Enhanced Dashboard](map_examples/stuttgart_enhanced_dashboard.png)
 *Comprehensive mobility analysis showing overall scores, public transport density, walkability, amenity density, green space ratio, and district areas across Stuttgart's districts*
 
 ### 🔺 Access to Essential Services
@@ -598,11 +598,7 @@ This pipeline could evolve into a comprehensive **Urban Geodata Platform** with 
 
 ---
 
-## 🔺 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
+-
 
 ## 🟣 Acknowledgments
 
