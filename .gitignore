@@ -9,6 +9,8 @@
 *.jpeg
 *.tiff
 *.tif
+*.gpkg
+*.html
 
 # Specific directories with large data
 pipeline/areas/*/data_final/raw/
@@ -22,6 +24,23 @@ cache/
 spatial_analysis/data/raw/
 spatial_analysis/data/processed/
 spatial_analysis/outputs/maps/
+spatial_analysis/outputs/*/maps/
+spatial_analysis/spatialviz/outputs/*/
+spatial_analysis/spatialviz/outputs/*/png_maps/
+spatial_analysis/spatialviz/outputs/*/geojson_layers/
+
+# Generated map outputs and dashboards
+spatial_analysis/outputs/*/dashboard/
+spatial_analysis/outputs/*/reports/
+spatial_analysis/outputs/*/rankings/
+spatial_analysis/spatialviz/outputs/*/kepler/
+spatial_analysis/spatialviz/outputs/*/qgis_ready_data/
+
+# Large generated files
+*_kepler_dashboard.html
+*_dashboard.html
+*_comprehensive_dashboard.html
+*_enhanced_dashboard.html
 
 # Python cache and compiled files
 __pycache__/

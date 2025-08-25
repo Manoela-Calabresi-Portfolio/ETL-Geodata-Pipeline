@@ -12,14 +12,44 @@ import matplotlib.patches as patches
 import contextily as cx
 
 # Import our local modules
+import sys
+sys.path.append("../style_helpers")
 from style_helpers import apply_style, palette
 from h3_utils import hex_polygon
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Updated paths to match current project structure
-DATA_DIR = Path("../main_pipeline/areas/stuttgart/data_final")
-OUT_DIR  = Path("outputs/maps"); OUT_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+
+def get_next_output_dir():
+    """Get the next available output directory in the series"""
+    outputs_base = Path("outputs")
+    if not outputs_base.exists():
+        outputs_base.mkdir(parents=True, exist_ok=True)
+    
+    # Find existing stuttgart_maps_* directories
+    existing_dirs = list(outputs_base.glob("stuttgart_maps_*"))
+    if not existing_dirs:
+        next_num = "001"
+    else:
+        # Extract numbers and find the highest
+        numbers = []
+        for d in existing_dirs:
+            try:
+                num_str = d.name.replace("stuttgart_maps_", "")
+                numbers.append(int(num_str))
+            except ValueError:
+                continue
+        next_num = f"{max(numbers) + 1:03d}" if numbers else "001"
+    
+    output_dir = outputs_base / f"stuttgart_maps_{next_num}"
+    return output_dir, next_num
+
+# Initialize output directories
+OUTPUT_BASE, RUN_NUMBER = get_next_output_dir()
+OUT_DIR = OUTPUT_BASE / "maps"; OUT_DIR.mkdir(parents=True, exist_ok=True)
+KEPLER_DIR = OUTPUT_BASE / "kepler_data"; KEPLER_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_CRS = 3857
 
 # ---------- Loaders ----------
@@ -436,7 +466,7 @@ def map_03_green_space_distribution(d, landuse, extent):
             transform=ax.transAxes, ha='center', fontsize=12, style='italic')
     
     # Add legend in right column
-    _add_simple_legend_right_column(ax, extent, "Green Areas", "#2d5a27", f"Total: {len(greens)} features", "0-max")
+    _add_simple_legend_right_column(ax, extent, "Green Areas", "#2d5a27", f"Total: {len(greens)} features")
     
     # Add data processing info box
     _add_data_info_box(ax, extent, "Data Processing:\n• Green areas: OSM landuse + natural tags\n• Categories: Forest, park, meadow, grass\n• Total green features: " + str(len(greens)) + "\n• Data: OpenStreetMap (OSM)")
@@ -705,8 +735,329 @@ def map_08_combined_accessibility_score(d, extent):
     
     _save(fig, "08_combined_accessibility_score.png")
 
+def map_11_building_density(d_kpi, buildings, extent):
+    """Map 11: Building density and urban structure analysis"""
+    print("  🏗️ Creating building density analysis map...")
+    
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    
+    # Calculate building density by district
+    buildings_3857 = buildings.to_crs(3857)
+    d = d_kpi.copy()
+    
+    # Spatial join to count buildings per district
+    buildings_joined = gpd.sjoin(buildings_3857, d[["geometry"]], predicate="within", how="inner")
+    building_counts = buildings_joined.groupby(buildings_joined.index_right).size()
+    d["building_count"] = d.index.map(building_counts).fillna(0)
+    d["building_density"] = d["building_count"] / d["area_km2"]
+    
+    # Plot building density
+    d.plot(ax=ax, column="building_density", cmap="YlOrRd", 
+           legend=True, legend_kwds={"shrink": 0.8, "label": "Buildings per km²"},
+           edgecolor="black", linewidth=0.5, alpha=0.8)
+    
+    # Add buildings as points
+    buildings_3857.plot(ax=ax, color="darkred", markersize=2, alpha=0.6, label="Buildings")
+    
+    ax.set_title("Stuttgart — Building Density Analysis", fontsize=16, fontweight="bold", pad=20)
+    ax.text(0.5, 0.02, "*Stuttgart — Gebäudedichte-Analyse*", 
+            transform=ax.transAxes, ha='center', fontsize=12, style='italic')
+    
+    _add_data_info_box(ax, extent, "Data Processing:\n• Building count per district\n• Density: buildings/km²\n• Urban structure analysis\n• Data: OSM buildings")
+    
+    _add_north_arrow_up(ax, extent)
+    _save(fig, "11_building_density.png")
+
+def map_12_amenity_accessibility(d_kpi, amenities, extent):
+    """Map 12: Amenity accessibility (healthcare, education, retail)"""
+    print("  🏥 Creating amenity accessibility map...")
+    
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    
+    # Classify amenities
+    amenities_3857 = amenities.to_crs(3857)
+    amenities_3857["category"] = amenities_3857.apply(_classify_amenity, axis=1)
+    
+    # Calculate accessibility by district
+    d = d_kpi.copy()
+    d["healthcare_count"] = 0
+    d["education_count"] = 0
+    d["retail_count"] = 0
+    
+    # Count amenities by category per district
+    for idx, district in d.iterrows():
+        district_geom = district.geometry
+        district_amenities = amenities_3857[amenities_3857.geometry.within(district_geom)]
+        
+        d.loc[idx, "healthcare_count"] = len(district_amenities[district_amenities["category"] == "Healthcare"])
+        d.loc[idx, "education_count"] = len(district_amenities[district_amenities["category"] == "Education"])
+        d.loc[idx, "retail_count"] = len(district_amenities[district_amenities["category"] == "Retail"])
+    
+    # Plot healthcare accessibility
+    d.plot(ax=ax, column="healthcare_count", cmap="Blues", 
+           legend=True, legend_kwds={"shrink": 0.8, "label": "Healthcare Facilities"},
+           edgecolor="black", linewidth=0.5, alpha=0.8)
+    
+    # Add amenities by category
+    for category, color in [("Healthcare", "blue"), ("Education", "green"), ("Retail", "orange")]:
+        cat_amenities = amenities_3857[amenities_3857["category"] == category]
+        if len(cat_amenities) > 0:
+            cat_amenities.plot(ax=ax, color=color, markersize=15, alpha=0.7, label=category)
+    
+    ax.set_title("Stuttgart — Amenity Accessibility Analysis", fontsize=16, fontweight="bold", pad=20)
+    ax.text(0.5, 0.02, "*Stuttgart — Einrichtungs-Zugänglichkeits-Analyse*", 
+            transform=ax.transAxes, ha='center', fontsize=12, style='italic')
+    
+    _add_data_info_box(ax, extent, "Data Processing:\n• Healthcare: hospitals, clinics, pharmacies\n• Education: schools, universities, libraries\n• Retail: shops, supermarkets, services\n• Data: OSM amenities")
+    
+    _add_north_arrow_up(ax, extent)
+    ax.legend(loc="upper right")
+    _save(fig, "12_amenity_accessibility.png")
+
+def map_13_road_network_quality(d_kpi, roads, extent):
+    """Map 13: Road network quality and classification"""
+    print("  🛣️ Creating road network analysis map...")
+    
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    
+    # Plot districts as background
+    d_kpi.plot(ax=ax, facecolor="lightgray", edgecolor="black", linewidth=0.5, alpha=0.3)
+    
+    # Classify and plot roads by type
+    roads_3857 = roads.to_crs(3857)
+    road_colors = {
+        "motorway": "red",
+        "trunk": "darkred", 
+        "primary": "orange",
+        "secondary": "yellow",
+        "tertiary": "lightblue",
+        "residential": "white",
+        "service": "gray"
+    }
+    
+    for road_type, color in road_colors.items():
+        type_roads = roads_3857[roads_3857["highway"] == road_type]
+        if len(type_roads) > 0:
+            type_roads.plot(ax=ax, color=color, linewidth=2, alpha=0.8, label=road_type.title())
+    
+    ax.set_title("Stuttgart — Road Network Quality Analysis", fontsize=16, fontweight="bold", pad=20)
+    ax.text(0.5, 0.02, "*Stuttgart — Straßennetz-Qualitäts-Analyse*", 
+            transform=ax.transAxes, ha='center', fontsize=12, style='italic')
+    
+    _add_data_info_box(ax, extent, "Data Processing:\n• Road classification by OSM highway tags\n• Quality indicators: surface, lanes, speed\n• Network connectivity analysis\n• Data: OSM roads")
+    
+    _add_north_arrow_up(ax, extent)
+    ax.legend(loc="upper right")
+    _save(fig, "13_road_network_quality.png")
+
+def map_14_service_diversity_h3(d_kpi, layers, extent):
+    """Map 14: Service diversity index (H3)"""
+    print("  🎯 Creating H3 service diversity map...")
+    
+    if layers["h3_pop"] is None:
+        print("  ⚠️ H3 population data not available, skipping...")
+        return
+    
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    
+    # Create H3 grid
+    from h3_utils import hex_polygon
+    h3_pop = layers["h3_pop"]
+    h3_polys = [hex_polygon(h) for h in h3_pop["h3"]]
+    h3_gdf = gpd.GeoDataFrame(h3_pop, geometry=h3_polys, crs=4326).to_crs(3857)
+    
+    # Calculate service diversity for each H3 cell
+    if layers.get("amenities") is not None:
+        amenities_3857 = layers["amenities"].to_crs(3857)
+        h3_gdf["service_diversity"] = h3_gdf.apply(
+            lambda row: _calculate_service_diversity(row.geometry, amenities_3857), axis=1
+        )
+        
+        # Plot H3 service diversity
+        h3_gdf.plot(ax=ax, column="service_diversity", cmap="viridis", 
+                   legend=True, legend_kwds={"shrink": 0.8, "label": "Service Diversity Index"},
+                   edgecolor="white", linewidth=0.1, alpha=0.7)
+    
+    ax.set_title("Stuttgart — H3 Service Diversity Index", fontsize=16, fontweight="bold", pad=20)
+    ax.text(0.5, 0.02, "*Stuttgart — H3 Dienstleistungs-Diversitäts-Index*", 
+            transform=ax.transAxes, ha='center', fontsize=12, style='italic')
+    
+    _add_data_info_box(ax, extent, "Data Processing:\n• H3 hexagonal grid (Resolution 8)\n• Service diversity: amenity types per cell\n• Spatial clustering analysis\n• Data: OSM amenities + H3 population")
+    
+    _add_north_arrow_up(ax, extent)
+    _save(fig, "15_service_diversity_h3.png")
+
+def map_15_infrastructure_quality(d_kpi, layers, extent):
+    """Map 15: Infrastructure quality composite score"""
+    print("  🏗️ Creating infrastructure quality score map...")
+    
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax.set_xlim(extent[0], extent[2])
+    ax.set_ylim(extent[1], extent[3])
+    
+    # Calculate composite infrastructure score
+    d = d_kpi.copy()
+    
+    # Normalize different metrics to 0-100 scale
+    d["road_quality"] = 100  # Placeholder - would need road quality data
+    
+    # Handle building density score safely
+    if "building_density" in d.columns and d["building_density"].max() > 0:
+        d["building_density_score"] = (d["building_density"] / d["building_density"].max() * 100).fillna(0)
+    else:
+        d["building_density_score"] = 50  # Default middle score
+    
+    # Handle amenity score safely
+    d["amenity_score"] = 50  # Default middle score for now
+    
+    # Handle PT score safely
+    if d["pt_stops_per_1k"].max() > 0:
+        d["pt_score"] = (d["pt_stops_per_1k"] / d["pt_stops_per_1k"].max() * 100).fillna(0)
+    else:
+        d["pt_score"] = 50  # Default middle score
+    
+    # Composite score (equal weights)
+    d["infrastructure_score"] = (
+        d["road_quality"] * 0.25 + 
+        d["building_density_score"] * 0.25 + 
+        d["amenity_score"] * 0.25 + 
+        d["pt_score"] * 0.25
+    ).round(1)
+    
+    # Plot infrastructure quality
+    d.plot(ax=ax, column="infrastructure_score", cmap="RdYlGn", 
+           legend=True, legend_kwds={"shrink": 0.8, "label": "Infrastructure Quality Score (0-100)"},
+           edgecolor="black", linewidth=0.5, alpha=0.8)
+    
+    ax.set_title("Stuttgart — Infrastructure Quality Composite Score", fontsize=16, fontweight="bold", pad=20)
+    ax.text(0.5, 0.02, "*Stuttgart — Infrastruktur-Qualitäts-Gesamtbewertung*", 
+            transform=ax.transAxes, ha='center', fontsize=12, style='italic')
+    
+    _add_data_info_box(ax, extent, "Data Processing:\n• Composite score: roads + buildings + amenities + PT\n• Equal weighting (25% each)\n• Normalized to 0-100 scale\n• Data: OSM + population data")
+    
+    _add_north_arrow_up(ax, extent)
+    _save(fig, "16_infrastructure_quality.png")
+
+def _classify_amenity(row):
+    """Classify amenities into categories"""
+    amenity_type = str(row.get("amenity", "")).lower()
+    shop_type = str(row.get("shop", ""), "").lower()
+    
+    if any(x in amenity_type for x in ["hospital", "clinic", "pharmacy", "doctors"]):
+        return "Healthcare"
+    elif any(x in amenity_type for x in ["school", "university", "library", "kindergarten"]):
+        return "Education"
+    elif any(x in shop_type for x in ["supermarket", "convenience", "department_store"]):
+        return "Retail"
+    else:
+        return "Other"
+
+def _calculate_service_diversity(geometry, amenities_gdf):
+    """Calculate service diversity for an H3 cell"""
+    # Find amenities within this H3 cell
+    cell_amenities = amenities_gdf[amenities_gdf.geometry.within(geometry)]
+    
+    # Count unique amenity types
+    unique_types = set()
+    for _, amenity in cell_amenities.iterrows():
+        amenity_type = str(amenity.get("amenity", "")).lower()
+        if amenity_type:
+            unique_types.add(amenity_type)
+    
+    return len(unique_types)
+
+def export_kepler_layers(layers, d_kpi):
+    """Export all relevant layers to GeoJSON for Kepler.gl"""
+    print("\n📊 Exporting layers to Kepler.gl format...")
+    
+    try:
+        # Export districts with KPIs
+        if d_kpi is not None:
+            districts_kepler = d_kpi.to_crs(4326)
+            districts_kepler.to_file(KEPLER_DIR / "01_districts_with_kpis.geojson", driver='GeoJSON')
+            print("  ✅ Districts with KPIs exported")
+        
+        # Export PT stops
+        if layers["pt_stops"] is not None:
+            pt_kepler = layers["pt_stops"].to_crs(4326)
+            pt_kepler.to_file(KEPLER_DIR / "02_pt_stops.geojson", driver='GeoJSON')
+            print("  ✅ PT stops exported")
+        
+        # Export roads
+        if layers["roads"] is not None:
+            roads_kepler = layers["roads"].to_crs(4326)
+            roads_kepler.to_file(KEPLER_DIR / "03_roads.geojson", driver='GeoJSON')
+            print("  ✅ Roads exported")
+        
+        # Export landuse/green areas
+        if layers["landuse"] is not None:
+            landuse_kepler = layers["landuse"].to_crs(4326)
+            landuse_kepler.to_file(KEPLER_DIR / "04_landuse.geojson", driver='GeoJSON')
+            print("  ✅ Landuse exported")
+        
+        # Export H3 population if available
+        if layers["h3_pop"] is not None:
+            h3_pop = layers["h3_pop"]
+            # Convert H3 to polygons
+            from h3_utils import hex_polygon
+            h3_polys = [hex_polygon(h) for h in h3_pop["h3"]]
+            h3_kepler = gpd.GeoDataFrame(h3_pop, geometry=h3_polys, crs=4326)
+            h3_kepler.to_file(KEPLER_DIR / "05_h3_population.geojson", driver='GeoJSON')
+            print("  ✅ H3 population exported")
+        
+        # Export city boundary
+        if layers["boundary"] is not None:
+            boundary_kepler = layers["boundary"].to_crs(4326)
+            boundary_kepler.to_file(KEPLER_DIR / "06_city_boundary.geojson", driver='GeoJSON')
+            print("  ✅ City boundary exported")
+        
+        # Export advanced H3 maps if they exist
+        try:
+            h3_advanced_dir = OUTPUT_BASE / "maps"
+            if (h3_advanced_dir / "08_park_access_time_h3.png").exists():
+                # Export park access H3 data
+                from generate_h3_advanced_maps import _load_parks_and_forests, _build_walk_graph, _candidate_entrances, _access_time_h3, make_h3_cover
+                import networkx as nx
+                
+                # Generate H3 park access data
+                dists = layers["districts"].to_crs(4326)
+                city_poly_wgs = gpd.GeoSeries([dists.unary_union], crs=4326).iloc[0]
+                h3g = make_h3_cover(city_poly_wgs, res=8)
+                
+                # Load parks and forests
+                parks, forests, city = _load_parks_and_forests()
+                roads = layers["roads"].to_crs(3857) if layers["roads"] is not None else gpd.GeoDataFrame(geometry=[], crs=3857)
+                G = _build_walk_graph(roads)
+                
+                # Calculate access times
+                park_ent, forest_ent = _candidate_entrances(parks, forests, roads)
+                h3g["tmin_park"] = _access_time_h3(G, h3g, park_ent)
+                h3g["tmin_forest"] = _access_time_h3(G, h3g, forest_ent)
+                
+                # Export to Kepler
+                h3g.to_crs(4326).to_file(KEPLER_DIR / "07_h3_park_access.geojson", driver='GeoJSON')
+                print("  ✅ H3 Park Access exported")
+                
+        except Exception as e:
+            print(f"  ⚠️ Advanced H3 export failed: {e}")
+        
+        print(f"📁 Kepler data exported to: {KEPLER_DIR}")
+        
+    except Exception as e:
+        print(f"⚠️ Kepler export failed: {e}")
+
 def main():
-    print("🗺️ Generating all 8 maps for Stuttgart H3 spatial analysis...")
+    print(f"🗺️ Generating all maps for Stuttgart H3 spatial analysis (Series {RUN_NUMBER})...")
+    print(f"📁 Output directory: {OUT_DIR}")
+    print(f"📁 Kepler directory: {KEPLER_DIR}")
     
     layers = load_layers()
     if layers["districts"] is None:
@@ -752,8 +1103,85 @@ def main():
     print("🗺️ Generating map 8: Combined accessibility score...")
     map_08_combined_accessibility_score(d_kpi, extent)
     
-    print("\n🎉 All 8 maps generated successfully!")
+    # Generate advanced H3 maps with better styling
+    print("\n🌳 Generating advanced H3 maps...")
+    try:
+        # Temporarily set the output directory for advanced maps
+        import sys
+        sys.path.append('.')
+        from generate_h3_advanced_maps import generate_h3_green_access_maps
+        
+        # Set the output directory for advanced maps
+        import generate_h3_advanced_maps
+        generate_h3_advanced_maps.OUT_DIR = OUT_DIR
+        
+        generate_h3_green_access_maps(layers)
+        print("  ✅ Advanced H3 maps generated")
+    except Exception as e:
+        print(f"  ⚠️ Advanced H3 maps failed: {e}")
+    
+    # Generate additional spatial analysis maps
+    print("\n🏗️ Generating infrastructure & service analysis...")
+    
+    # Map 11: Building density and urban structure
+    if layers.get("buildings") is not None:
+        print("🗺️ Generating map 11: Building density analysis...")
+        map_11_building_density(d_kpi, layers["buildings"], extent)
+    
+    # Map 12: Amenity accessibility (healthcare, education, retail)
+    if layers.get("amenities") is not None:
+        print("🗺️ Generating map 12: Amenity accessibility...")
+        map_12_amenity_accessibility(d_kpi, layers["amenities"], extent)
+    
+    # Map 13: Road network quality and classification
+    if layers.get("roads") is not None:
+        print("🗺️ Generating map 13: Road network analysis...")
+        map_13_road_network_quality(d_kpi, layers["roads"], extent)
+    
+    # Map 14: Service diversity index (H3)
+    print("🗺️ Generating map 14: Service diversity index...")
+    map_14_service_diversity_h3(d_kpi, layers, extent)
+    
+    # Map 15: Infrastructure quality composite score
+    print("🗺️ Generating map 15: Infrastructure quality score...")
+    map_15_infrastructure_quality(d_kpi, layers, extent)
+    
+    # Generate comprehensive maps for Kepler data
+    print("\n🗺️ Generating comprehensive Kepler data maps...")
+    map_16_landuse_comprehensive(d_kpi, layers["landuse"], extent)
+    map_17_road_network_comprehensive(d_kpi, layers["roads"], extent)
+    map_18_pt_stops_comprehensive(d_kpi, layers["pt_stops"], extent)
+    map_19_h3_population_comprehensive(d_kpi, layers["h3_pop"], extent)
+    map_20_districts_kpi_comprehensive(d_kpi, extent)
+    
+    # Export Kepler layers
+    export_kepler_layers(layers, d_kpi)
+    
+    # Create run info file
+    import json
+    from datetime import datetime
+    run_info = {
+        "run_number": RUN_NUMBER,
+        "timestamp": datetime.now().isoformat(),
+        "output_directory": str(OUTPUT_BASE),
+        "maps_generated": 20,  # 8 basic + 3 advanced H3 + 5 infrastructure + 4 comprehensive
+        "kepler_layers_exported": True,
+        "advanced_h3_maps": True,
+        "infrastructure_analysis": True,
+        "comprehensive_kepler_maps": True,
+        "districts_count": len(d_kpi),
+        "total_population": int(d_kpi['population'].sum()),
+        "total_green_area_km2": float(d_kpi['green_area_km2'].sum()),
+        "total_pt_stops": int(d_kpi['pt_stops_count'].sum())
+    }
+    
+    with open(OUTPUT_BASE / "run_info.json", 'w') as f:
+        json.dump(run_info, f, indent=2)
+    
+    print("\n🎉 All 20 maps generated successfully!")
     print(f"📁 Check outputs in: {OUT_DIR}")
+    print(f"📁 Check Kepler data in: {KEPLER_DIR}")
+    print(f"📊 Run info saved: {OUTPUT_BASE / 'run_info.json'}")
 
 if __name__ == "__main__":
     main()

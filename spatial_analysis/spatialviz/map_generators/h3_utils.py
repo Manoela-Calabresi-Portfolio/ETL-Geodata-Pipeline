@@ -4,7 +4,9 @@ from typing import Iterable, List
 import geopandas as gpd
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
-from utils.h3_helpers import gdf_polygons_to_h3, h3_to_shapely_geometry
+import sys
+sys.path.append("../utils")
+from h3_helpers import gdf_polygons_to_h3, h3_to_shapely_geometry
 
 def hex_polygon(h: str) -> Polygon:
     # Use our custom helper function
