@@ -25,23 +25,23 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 ## 🔺 Visual Outputs Showcase
 
 ### 🔺 Stuttgart Enhanced Mobility & Infrastructure Dashboard
-![Stuttgart Enhanced Dashboard](spatial_analysis/spatialviz/outputs/stuttgart_maps_125/png_maps/17_overall_score.png)
+![Stuttgart Enhanced Dashboard](map_examples/17_overall_score.png)
 *Comprehensive mobility analysis showing overall scores, public transport density, walkability, amenity density, green space ratio, and district areas across Stuttgart's districts*
 
 ### 🔺 Access to Essential Services
-![Access to Essentials](spatial_analysis/spatialviz/outputs/stuttgart_maps_125/png_maps/05_access_essentials_h3.png)
+![Access to Essentials](map_examples/05_access_essentials_h3.png)
 *H3 hexagonal grid visualization of essential services accessibility within 10-minute walking distance*
 
 ### 🔺 Land Use, Roads & Public Transport Overview
-![Land Use Overview](spatial_analysis/spatialviz/outputs/stuttgart_maps_125/png_maps/01_overview_landuse_roads_pt.png)
-*Comprehensive city overview showing land use patterns, road networks, and public transport stops*
+![Land Use Overview](map_examples/04_pt_modal_gravity_h3.png)
+*Public transport modal gravity analysis showing transport accessibility patterns across Stuttgart*
 
 ### 🔺 Park Accessibility Analysis
-![Park Access Time](spatial_analysis/spatialviz/outputs/stuttgart_maps_125/png_maps/08_park_access_time_h3.png)
+![Park Access Time](map_examples/08_park_access_time_h3.png)
 *Walking time to nearest parks using H3 hexagonal grid system*
 
 ### 🔺 Service Diversity Distribution
-![Service Diversity](spatial_analysis/spatialviz/outputs/stuttgart_maps_125/png_maps/07_service_diversity_h3.png)
+![Service Diversity](map_examples/07_service_diversity_h3.png)
 *Service diversity analysis using Shannon Entropy across Stuttgart's hexagonal grid*
 
 ---
