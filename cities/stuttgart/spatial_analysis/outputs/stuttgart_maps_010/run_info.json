@@ -1,0 +1,14 @@
+{
+  "run_number": 10,
+  "timestamp": "2025-08-26T12:02:36.900075",
+  "output_directory": "..\\outputs\\stuttgart_maps_010",
+  "layers_generated": 24,
+  "basic_layers": 6,
+  "h3_analysis_layers": 5,
+  "choropleth_layers": 7,
+  "kepler_config": true,
+  "kepler_dashboard": true,
+  "png_maps": 4,
+  "districts_count": 23,
+  "total_population": 610392
+}

@@ -1,0 +1,222 @@
+# Enhanced Styles Configuration for Stuttgart Maps
+# Matches reference maps exactly
+
+# Color schemes for different map types
+color_schemes:
+  # H3 Essentials Map (Purple sequential - matches reference exactly)
+  essentials_h3:
+    name: "Purple Sequential"
+    colors: 
+      - "#f7f4f9"  # Very light purple (almost white)
+      - "#e7e1ef"  # Light purple
+      - "#d4b9da"  # Medium light purple
+      - "#c994c7"  # Medium purple
+      - "#df65b0"  # Medium dark purple
+      - "#e7298a"  # Dark purple
+      - "#ce1256"  # Very dark purple
+    range: [0, 6]
+    label: "# Essential Types (≤10 min walk)"
+    legend_position: "right"
+    legend_orientation: "vertical"
+  
+  # H3 Service Diversity Map (Yellow to Blue - matches reference exactly)
+  service_diversity_h3:
+    name: "Yellow to Blue"
+    colors:
+      - "#ffffcc"  # Very light yellow
+      - "#c7e9b4"  # Light green-yellow
+      - "#7fcdbb"  # Light teal
+      - "#41b6c4"  # Medium teal
+      - "#1d91c0"  # Medium blue
+      - "#225ea8"  # Dark blue
+      - "#0c2c84"  # Very dark blue
+    range: [0.0, 3.0]
+    label: "Service Diversity (Shannon Entropy)"
+    legend_position: "right"
+    legend_orientation: "vertical"
+  
+  # Walkability Score Map (Orange to Brown - matches reference exactly)
+  walkability_score:
+    name: "Orange to Brown"
+    colors:
+      - "#fff7ec"  # Very light orange (almost white)
+      - "#fee8c8"  # Light orange
+      - "#fdd49e"  # Medium light orange
+      - "#fdbb84"  # Medium orange
+      - "#fc8d59"  # Medium dark orange
+      - "#e34a33"  # Dark orange-red
+      - "#b30000"  # Very dark brown-red
+    range: [0.0, 1.0]
+    label: "Walkability Score"
+    legend_position: "bottom"
+    legend_orientation: "horizontal"
+  
+  # PT Density Map (Light to Dark Blue)
+  pt_density:
+    name: "Light to Dark Blue"
+    colors:
+      - "#f7fbff"  # Very light blue (almost white)
+      - "#deebf7"  # Light blue
+      - "#c6dbef"  # Medium light blue
+      - "#9ecae1"  # Medium blue
+      - "#6baed6"  # Medium dark blue
+      - "#3182bd"  # Dark blue
+      - "#08519c"  # Very dark blue
+    range: [0.0, 1.0]
+    label: "PT Stop Density"
+    legend_position: "right"
+    legend_orientation: "vertical"
+  
+  # Green Space Ratio Map (Light to Dark Green)
+  green_space_ratio:
+    name: "Light to Dark Green"
+    colors:
+      - "#f7fcf5"  # Very light green (almost white)
+      - "#e5f5e0"  # Light green
+      - "#c7e9c0"  # Medium light green
+      - "#a1d99b"  # Medium green
+      - "#74c476"  # Medium dark green
+      - "#41ab5d"  # Dark green
+      - "#238b45"  # Very dark green
+    range: [0.0, 1.0]
+    label: "Green Space Ratio (%)"
+    legend_position: "right"
+    legend_orientation: "vertical"
+  
+  # Mobility Score Map (Red to Green diverging)
+  mobility_score:
+    name: "Red to Green"
+    colors:
+      - "#d73027"  # Dark red
+      - "#f46d43"  # Medium red
+      - "#fdae61"  # Light red
+      - "#fee08b"  # Very light yellow
+      - "#d9ef8b"  # Light green
+      - "#a6d96a"  # Medium green
+      - "#66bd63"  # Dark green
+    range: [0.0, 1.0]
+    label: "Mobility Score"
+    legend_position: "right"
+    legend_orientation: "vertical"
+  
+  # Overview Landuse Map (Categorical colors)
+  overview_landuse:
+    name: "Land Use Categories"
+    categories:
+      forest: "#2d5a27"        # Dark green
+      farmland: "#8fbc8f"      # Medium green
+      parks: "#32cd32"         # Bright green
+      other_green: "#90ee90"   # Light green
+      residential: "#ffb6c1"   # Light pink
+      industrial: "#808080"    # Gray
+      commercial: "#ffc0cb"    # Light pink
+      roads: "#808080"         # Gray
+      pt_stops: "#ff0000"      # Red
+      city_boundary: "#000000" # Black
+
+# Map layout settings
+layout:
+  figure_size: [20, 16]
+  dpi: 300
+  title_fontsize: 16
+  subtitle_fontsize: 12
+  legend_fontsize: 11
+  label_fontsize: 10
+  grid_alpha: 0.3
+  boundary_linewidth: 2
+  boundary_color: "#000000"
+  background_color: "#ffffff"
+  text_color: "#000000"
+
+# H3 specific settings
+h3:
+  edge_color: "#ffffff"
+  edge_linewidth: 0.1
+  alpha: 0.8
+  legend_position: "right"
+  legend_orientation: "vertical"
+  legend_shrink: 0.8
+  legend_pad: 0.1
+
+# Choropleth settings
+choropleth:
+  edge_color: "#555555"
+  edge_linewidth: 0.5
+  alpha: 0.8
+  legend_position: "right"
+  legend_orientation: "vertical"
+  legend_shrink: 0.8
+  legend_pad: 0.1
+
+# Dashboard settings
+dashboard:
+  grid_layout: [2, 3]
+  figure_size: [24, 16]
+  title_fontsize: 20
+  subtitle_fontsize: 14
+  spacing: 0.1
+  top_margin: 0.95
+
+# Text and labels
+text:
+  district_label_fontsize: 8
+  district_label_weight: "bold"
+  district_label_bbox:
+    boxstyle: "round,pad=0.2"
+    facecolor: "white"
+    edgecolor: "black"
+    alpha: 0.8
+  
+  metadata_box:
+    fontsize: 10
+    fontweight: "bold"
+    bbox:
+      boxstyle: "round,pad=0.5"
+      facecolor: "white"
+      edgecolor: "black"
+      alpha: 0.9
+  
+  north_arrow:
+    fontsize: 12
+    fontweight: "bold"
+    bbox:
+      boxstyle: "circle,pad=0.3"
+      facecolor: "white"
+      edgecolor: "black"
+      alpha: 0.9
+
+# Map elements
+map_elements:
+  north_arrow:
+    position: [0.95, 0.95]
+    size: 0.1
+    color: "#000000"
+    linewidth: 2
+  
+  scale_bar:
+    position: [0.05, 0.05]
+    length: 5000  # 5km
+    color: "#000000"
+    linewidth: 3
+  
+  legend:
+    position: "right"
+    orientation: "vertical"
+    shrink: 0.8
+    pad: 0.1
+    border: true
+    border_color: "#333333"
+    border_linewidth: 1.5
+
+# Export settings
+export:
+  format: "png"
+  dpi: 300
+  bbox_inches: "tight"
+  facecolor: "white"
+  edgecolor: "none"
+  transparent: false
+  metadata:
+    creator: "Stuttgart Spatial Analysis Pipeline"
+    software: "Enhanced Style Engine"
+    version: "2.0"

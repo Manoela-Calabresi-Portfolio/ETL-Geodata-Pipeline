@@ -30,7 +30,7 @@ from h3_helpers import gdf_polygons_to_h3, h3_to_shapely_geometry
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Constants
-DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 
 def get_next_output_dir():
     """Get the next available output directory in the series"""

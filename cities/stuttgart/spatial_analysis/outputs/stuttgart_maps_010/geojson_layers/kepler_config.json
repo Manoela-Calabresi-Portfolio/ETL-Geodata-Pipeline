@@ -1,0 +1,45 @@
+{
+  "version": "v1",
+  "config": {
+    "visState": {
+      "filters": [],
+      "layers": [],
+      "splitMaps": [],
+      "interactionConfig": {
+        "tooltip": {
+          "enabled": true
+        },
+        "brush": {
+          "enabled": false
+        },
+        "geocoder": {
+          "enabled": false
+        },
+        "coordinate": {
+          "enabled": false
+        }
+      }
+    },
+    "mapState": {
+      "bearing": 0,
+      "dragRotate": false,
+      "latitude": 48.7758,
+      "longitude": 9.1829,
+      "pitch": 0,
+      "zoom": 10,
+      "isSplit": false
+    },
+    "mapStyle": {
+      "styleType": "dark",
+      "topLayerGroups": {},
+      "visibleLayerGroups": {
+        "label": true,
+        "road": true,
+        "border": false,
+        "building": true,
+        "water": true,
+        "land": true
+      }
+    }
+  }
+}

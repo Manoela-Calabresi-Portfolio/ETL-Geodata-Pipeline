@@ -113,7 +113,7 @@ def load_all_layers():
     all_layers = {}
     
         # Load basic infrastructure layers
-    basic_dir = Path("../outputs/maps/kepler_data")
+    basic_dir = Path("../outputs/kepler_data")
     basic_files = [
         "01_city_boundary.geojson",
         "02_districts.geojson",
@@ -124,7 +124,7 @@ def load_all_layers():
     ]
     
     # Use official processed district boundaries instead of kepler_data
-    districts_file = Path("../../data/stuttgart/processed/stadtbezirke.parquet")
+    districts_file = Path("../data/stuttgart/processed/stadtbezirke.parquet")
     if districts_file.exists():
         try:
             districts_gdf = gpd.read_parquet(districts_file)
@@ -807,7 +807,7 @@ def create_layer_png(gdf, layer_name, output_file, basic_colors, h3_colors, colo
     # Load city boundary for clipping and extent
     try:
         # Use the official processed district boundaries
-        city_boundary_file = Path("../../data/stuttgart/processed/stadtbezirke.parquet")
+        city_boundary_file = Path("../data/stuttgart/processed/stadtbezirke.parquet")
         if city_boundary_file.exists():
             city_boundary = gpd.read_parquet(city_boundary_file)
             # Get the overall city boundary by dissolving all districts
@@ -816,7 +816,7 @@ def create_layer_png(gdf, layer_name, output_file, basic_colors, h3_colors, colo
             print(f"  ✅ Loaded city boundary from processed districts: {city_boundary_file}")
         else:
             # Fallback to kepler_data if processed file not found
-            fallback_file = Path("../outputs/maps/kepler_data/01_city_boundary.geojson")
+            fallback_file = Path("../outputs/kepler_data/01_city_boundary.geojson")
             if fallback_file.exists():
                 city_boundary = gpd.read_file(fallback_file)
                 city_bounds = city_boundary.total_bounds
