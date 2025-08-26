@@ -53,15 +53,6 @@ ESSENTIALS = {
     "healthcare": {"hospital", "clinic", "doctor", "doctors"}
 }
 
-# Green access parameters
-BOUNDARY_SAMPLE_STEP_M = 80
-PARK_MIN_AREA_M2 = 10_000
-FOREST_MIN_AREA_M2 = 20_000
-PARK_TARGET_MIN = 10
-FOREST_TARGET_MIN = 15
-WALK_SPEED_MPM = 80
-CANDIDATE_ENTRANCES_K = 8
-
 def get_next_output_dir():
     """Get the next available output directory in the series"""
     outputs_base = Path("outputs")
@@ -88,7 +79,6 @@ def get_next_output_dir():
 OUTPUT_BASE, RUN_NUMBER = get_next_output_dir()
 OUT_DIR = OUTPUT_BASE / "maps"; OUT_DIR.mkdir(parents=True, exist_ok=True)
 KEPLER_DIR = OUTPUT_BASE / "kepler_data"; KEPLER_DIR.mkdir(parents=True, exist_ok=True)
-MAPS_DIR = OUT_DIR  # For compatibility with stuttgart_maps_all.py functions
 
 def load_data():
     """Load all required data layers"""
@@ -917,54 +907,40 @@ def main():
     print("\n🗺️ Generating maps...")
     
     try:
-        # Overview maps
+        # Generate only the maps you want
         generate_overview_maps(data)
-        
-        # District accessibility maps
         generate_district_accessibility_maps(data, DISTRICTS_FOCUS)
-        
-        # H3 Analysis maps
         map04_pt_modal_gravity_h3(data)
-        map04a_pt_pop_mismatch_h3(data) 
-        map04b_pt_pop_small_multiples_h3(data)
         map05_access_essentials_h3(data)
         map07_service_diversity_h3(data)
-        
-        # Green access maps
-        map08_park_access_time_h3(data)
-        map09_forest_access_time_h3(data)
-        
-        # Infrastructure analysis maps
-        map_11_building_density(data, extent, city_boundary_buffered)
-        map_12_amenity_accessibility(data, extent, city_boundary_buffered)
-        map_13_road_network_quality(data, extent, city_boundary_buffered)
         
         # Create run info
         run_info = {
             "run_number": RUN_NUMBER,
             "timestamp": pd.Timestamp.now().isoformat(),
             "output_directory": str(OUTPUT_BASE),
-            "maps_generated": 13,  # Exact count of maps we want
-            "kepler_layers_exported": True,
+            "maps_generated": 9,  # 1 overview + 6 districts + 2 H3
+            "kepler_layers_exported": False,
             "consolidated_analysis": True,
-            "available_data": [desc for _, desc in required_files if _],
-            "features": [
-                "Overview maps",
-                "District accessibility maps", 
-                "H3 PT analysis",
-                "H3 amenity analysis",
-                "Green access analysis",
-                "Infrastructure analysis",
-                "Kepler export"
+            "maps_list": [
+                "01_overview_landuse_roads_pt.png",
+                "03_access_mitte.png",
+                "03_access_nord.png", 
+                "03_access_süd.png",
+                "03_access_west.png",
+                "03_access_ost.png",
+                "03_access_bad_cannstatt.png",
+                "04_pt_modal_gravity_h3.png",
+                "05_access_essentials_h3.png",
+                "07_service_diversity_h3.png"
             ]
         }
         
         with open(OUTPUT_BASE / "run_info.json", 'w') as f:
             json.dump(run_info, f, indent=2)
         
-        print("\n🎉 All 13 consolidated maps generated successfully!")
+        print(f"\n🎉 All {run_info['maps_generated']} consolidated maps generated successfully!")
         print(f"📁 Check outputs in: {OUT_DIR}")
-        print(f"📁 Check Kepler data in: {KEPLER_DIR}")
         print(f"📊 Run info saved: {OUTPUT_BASE / 'run_info.json'}")
         
     except Exception as e:
