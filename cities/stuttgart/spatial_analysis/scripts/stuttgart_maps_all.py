@@ -45,7 +45,7 @@ except Exception:
     h3 = None
 
 # caminhos (ajuste se necessário)
-DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 
 # helpers externos (opcional; apenas para alguns mapas coropléticos)
 sys.path.append('..')
@@ -503,7 +503,7 @@ def _is_essential(row):
             s in {"supermarket"} or a == "marketplace")
 
 def _parks_polygons_3857():
-    base = Path("../main_pipeline/areas/stuttgart/data_final")/"processed"
+    base = Path("../data/processed")
     fn = base/"parks_extracted_osmnx.parquet"
     if fn.exists():
         try:
@@ -822,7 +822,7 @@ def main():
     print("\n🗺️ Generating MAP 4–10 (H3 diagnostics + green access)…")
     map04_pt_modal_gravity_h3(data)
     map05_access_essentials_h3(data)
-    map06_detour_factor_h3(data)
+    # map06_detour_factor_h3(data)  # Function not implemented yet
     map07_service_diversity_h3(data)
     map08_park_access_time_h3(data)
     map09_forest_access_time_h3(data)

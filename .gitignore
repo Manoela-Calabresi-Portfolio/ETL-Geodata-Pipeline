@@ -11,6 +11,7 @@
 *.tif
 *.gpkg
 *.html
+*.csv
 
 # Exception: Allow showcase images in map_examples folder
 !map_examples/*.png

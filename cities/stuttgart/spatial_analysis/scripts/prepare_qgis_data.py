@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 # Configuration
-DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 OUTPUT_DIR = Path("../outputs/qgis_ready_data")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

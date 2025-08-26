@@ -19,7 +19,7 @@ CKAN_CSV_URL = (
 )
 
 # Updated paths to match current project structure
-DATA_DIR = Path("../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 OUT_DIR  = DATA_DIR
 DISTRICTS_PATH = Path("../spatial_analysis/areas/stuttgart_districts_official/OpenData_KLGL_GENERALISIERT.gpkg")
 H3_RES = 8  # Using resolution 8 as requested

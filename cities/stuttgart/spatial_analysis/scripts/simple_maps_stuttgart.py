@@ -19,7 +19,7 @@ from shapely import wkb
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Constants
-DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 PLOT_CRS = 3857
 
 def get_next_output_dir():
