@@ -868,60 +868,110 @@ def main():
     print("📊 Loading data layers...")
     data = load_data()
     
+    # Check what data is available
+    print("\n🔍 Data availability check:")
+    required_files = [
+        (DATA_DIR / "districts_with_population.geojson", "Districts"),
+        (DATA_DIR / "processed/landuse_categorized.parquet", "Landuse"),
+        (DATA_DIR / "processed/roads_categorized.parquet", "Roads"),
+        (DATA_DIR / "processed/pt_stops_categorized.parquet", "PT Stops"),
+        (DATA_DIR / "processed/amenities_categorized.parquet", "Amenities"),
+        (DATA_DIR / "city_boundary.geojson", "City Boundary"),
+        (DATA_DIR / "h3_population_res8.parquet", "H3 Population")
+    ]
+    
+    missing_files = []
+    available_data = []
+    
+    for file_path, description in required_files:
+        if file_path.exists():
+            available_data.append(f"  ✅ {description}: {file_path}")
+        else:
+            missing_files.append(f"  ❌ {description}: {file_path}")
+    
+    for item in available_data:
+        print(item)
+    for item in missing_files:
+        print(item)
+    
+    if missing_files:
+        print(f"\n⚠️  Missing {len(missing_files)} required data files!")
+        print("\n📝 To generate maps, you need to:")
+        print("1. Run the data extraction pipeline to get OSM data")
+        print("2. Run population_pipeline_stuttgart.py for population data")
+        print("3. Ensure all processed data files are in the correct locations")
+        print(f"\n💡 Expected data directory: {DATA_DIR.absolute()}")
+        return
+    
+    # Validate loaded data
+    critical_data = ["districts", "boundary"]
+    for key in critical_data:
+        if data[key] is None:
+            print(f"❌ Critical data '{key}' could not be loaded")
+            return
+    
     # Get extent
     extent, city_boundary_buffered = _city_extent_and_boundary(data)
     
     # Generate all requested maps
     print("\n🗺️ Generating maps...")
     
-    # Overview maps
-    generate_overview_maps(data)
-    
-    # District accessibility maps
-    generate_district_accessibility_maps(data, DISTRICTS_FOCUS)
-    
-    # H3 Analysis maps
-    map04_pt_modal_gravity_h3(data)
-    map04a_pt_pop_mismatch_h3(data) 
-    map04b_pt_pop_small_multiples_h3(data)
-    map05_access_essentials_h3(data)
-    map07_service_diversity_h3(data)
-    
-    # Green access maps
-    map08_park_access_time_h3(data)
-    map09_forest_access_time_h3(data)
-    
-    # Infrastructure analysis maps
-    map_11_building_density(data, extent, city_boundary_buffered)
-    map_12_amenity_accessibility(data, extent, city_boundary_buffered)
-    map_13_road_network_quality(data, extent, city_boundary_buffered)
-    
-    # Create run info
-    run_info = {
-        "run_number": RUN_NUMBER,
-        "timestamp": pd.Timestamp.now().isoformat(),
-        "output_directory": str(OUTPUT_BASE),
-        "maps_generated": 13,  # Exact count of maps we want
-        "kepler_layers_exported": True,
-        "consolidated_analysis": True,
-        "features": [
-            "Overview maps",
-            "District accessibility maps", 
-            "H3 PT analysis",
-            "H3 amenity analysis",
-            "Green access analysis",
-            "Infrastructure analysis",
-            "Kepler export"
-        ]
-    }
-    
-    with open(OUTPUT_BASE / "run_info.json", 'w') as f:
-        json.dump(run_info, f, indent=2)
-    
-    print("\n🎉 All 13 consolidated maps generated successfully!")
-    print(f"📁 Check outputs in: {OUT_DIR}")
-    print(f"📁 Check Kepler data in: {KEPLER_DIR}")
-    print(f"📊 Run info saved: {OUTPUT_BASE / 'run_info.json'}")
+    try:
+        # Overview maps
+        generate_overview_maps(data)
+        
+        # District accessibility maps
+        generate_district_accessibility_maps(data, DISTRICTS_FOCUS)
+        
+        # H3 Analysis maps
+        map04_pt_modal_gravity_h3(data)
+        map04a_pt_pop_mismatch_h3(data) 
+        map04b_pt_pop_small_multiples_h3(data)
+        map05_access_essentials_h3(data)
+        map07_service_diversity_h3(data)
+        
+        # Green access maps
+        map08_park_access_time_h3(data)
+        map09_forest_access_time_h3(data)
+        
+        # Infrastructure analysis maps
+        map_11_building_density(data, extent, city_boundary_buffered)
+        map_12_amenity_accessibility(data, extent, city_boundary_buffered)
+        map_13_road_network_quality(data, extent, city_boundary_buffered)
+        
+        # Create run info
+        run_info = {
+            "run_number": RUN_NUMBER,
+            "timestamp": pd.Timestamp.now().isoformat(),
+            "output_directory": str(OUTPUT_BASE),
+            "maps_generated": 13,  # Exact count of maps we want
+            "kepler_layers_exported": True,
+            "consolidated_analysis": True,
+            "available_data": [desc for _, desc in required_files if _],
+            "features": [
+                "Overview maps",
+                "District accessibility maps", 
+                "H3 PT analysis",
+                "H3 amenity analysis",
+                "Green access analysis",
+                "Infrastructure analysis",
+                "Kepler export"
+            ]
+        }
+        
+        with open(OUTPUT_BASE / "run_info.json", 'w') as f:
+            json.dump(run_info, f, indent=2)
+        
+        print("\n🎉 All 13 consolidated maps generated successfully!")
+        print(f"📁 Check outputs in: {OUT_DIR}")
+        print(f"📁 Check Kepler data in: {KEPLER_DIR}")
+        print(f"📊 Run info saved: {OUTPUT_BASE / 'run_info.json'}")
+        
+    except Exception as e:
+        print(f"\n❌ Error during map generation: {e}")
+        print(f"💡 This is likely due to missing or incompatible data files.")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
