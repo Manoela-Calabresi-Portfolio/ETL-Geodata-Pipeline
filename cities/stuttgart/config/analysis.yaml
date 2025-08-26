@@ -1,0 +1,107 @@
+# Stuttgart Analysis Configuration
+# Adapted from existing spatial_analysis/config/analysis_config.yaml
+
+analysis:
+  # Modules to run
+  modules:
+    - "data_collection"
+    - "kpi_calculation"
+    - "visualization"
+    - "database_storage"
+  
+  # Data sources configuration
+  data_sources:
+    # Main pipeline data (reuse when possible)
+    main_pipeline:
+      amenities: "data_final/stuttgart/processed/amenities_categorized.parquet"
+      pt_stops: "data_final/stuttgart/processed/pt_stops_categorized.parquet"
+      roads: "data_final/stuttgart/processed/roads_categorized.parquet"
+      landuse: "data_final/stuttgart/processed/landuse_categorized.parquet"
+    
+    # External data sources
+    external:
+      gtfs_vvs: "https://download.mobidata-bw.de/soll-fahrplandaten-vvs.zip"
+      stadtbezirke: "https://www.stuttgart.de/open-data/stadtbezirke.geojson"
+    
+    # OSM data collection
+    osm:
+      place_name: "Stuttgart, Baden-Württemberg, Germany"
+      network_type: "walk"  # For walkability analysis
+  
+  # Analysis parameters
+  parameters:
+    # Public transport analysis
+    public_transport:
+      high_frequency_threshold: 15    # minutes (max headway for high frequency)
+      peak_hours: ["07:00", "09:00", "17:00", "19:00"]  # Peak hours
+      access_distance: 300            # meters (max distance to stop)
+      service_hours: ["05:00", "24:00"]  # Service hours
+    
+    # Walkability analysis
+    walkability:
+      poi_access_distance: 500        # meters
+      intersection_buffer: 50         # meters for intersection cleaning
+      sidewalk_analysis: true         # Include sidewalk analysis
+      pedestrian_priority: true       # Prioritize pedestrian infrastructure
+    
+    # Green spaces analysis
+    green_spaces:
+      access_distance: 500            # meters
+      min_area: 1000                 # m² (min area to consider green space)
+      quality_factors: ["size", "accessibility", "facilities"]
+    
+    # Mobility accessibility
+    mobility_accessibility:
+      multimodal_threshold: 800      # meters for multimodal access
+      car_dependency_reduction: true  # Focus on reducing car dependency
+  
+  # POI categories of interest
+  poi_categories:
+    essential_services:
+      - "education"      # schools, universities
+      - "healthcare"     # hospitals, clinics, pharmacies
+      - "financial"      # banks, ATMs
+      - "food_beverage"  # supermarkets, restaurants
+      - "government"     # administrative offices
+    
+    recreation_culture:
+      - "community"      # community centers
+      - "recreation"     # leisure areas
+      - "culture"        # museums, theaters
+      - "sports"         # sports facilities
+    
+    transport_hubs:
+      - "transport"      # major transport nodes
+      - "parking"        # parking facilities
+  
+  # Processing configuration
+  processing:
+    parallel_jobs: 4
+    chunk_size: 1000
+    cache_results: true
+    enable_postgis: true             # Use PostGIS for spatial operations
+  
+  # Output configuration
+  outputs:
+    formats: ["parquet", "geojson", "csv", "postgis"]
+    maps:
+      dpi: 300
+      format: "png"
+      colormap: "viridis"
+      include_legend: true
+      legend_position: "inside"      # Legend inside map bounds
+    
+    # Database storage
+    database:
+      store_results: true
+      store_metadata: true
+      create_lineage: true
+      backup_enabled: true
+  
+  # Logging configuration
+  logging:
+    level: "INFO"
+    format: "[%(asctime)s] %(levelname)s - %(name)s: %(message)s"
+    file: "spatial_analysis/outputs/logs/stuttgart_analysis.log"
+    enable_performance_logging: true
+

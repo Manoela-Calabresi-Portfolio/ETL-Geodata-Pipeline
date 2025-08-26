@@ -1,0 +1,43 @@
+# Database Configuration Template
+# Copy this file and customize for your city's database setup
+
+database:
+  # PostgreSQL/PostGIS connection settings
+  host: "localhost"                    # Database host (localhost for local, IP for remote)
+  port: 5432                           # PostgreSQL port (default: 5432)
+  database: "etl_geodata_pipeline"     # Database name
+  user: "etl_user"                     # Database username
+  password: "your_secure_password"     # Database password
+  
+  # Schema configuration
+  schema: "etl_pipeline"               # Default schema for ETL data
+  city_schema: "city_specific"         # City-specific data schema
+  
+  # Connection settings
+  max_connections: 10                  # Maximum database connections
+  connection_timeout: 30               # Connection timeout in seconds
+  query_timeout: 300                   # Query timeout in seconds
+  
+  # Performance settings
+  enable_spatial_indexing: true        # Enable spatial indexing for better performance
+  batch_size: 1000                     # Batch size for bulk operations
+  
+  # Backup settings
+  backup_enabled: true                 # Enable automatic backups
+  backup_retention_days: 30            # Keep backups for X days
+  backup_schedule: "daily"             # Backup frequency (daily, weekly, monthly)
+  
+  # Security settings
+  ssl_mode: "prefer"                   # SSL mode (disable, allow, prefer, require)
+  ssl_cert: ""                         # SSL certificate path (if required)
+  ssl_key: ""                          # SSL key path (if required)
+  
+  # Monitoring settings
+  enable_query_logging: false          # Log all SQL queries (for debugging)
+  enable_performance_monitoring: true  # Enable performance metrics collection
+  
+  # Development settings
+  auto_create_database: true           # Automatically create database if not exists
+  auto_initialize_schema: true         # Automatically initialize schema tables
+  drop_tables_on_reset: false          # Drop tables when resetting (DANGEROUS!)
+

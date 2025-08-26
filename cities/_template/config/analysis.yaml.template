@@ -1,0 +1,270 @@
+# Analysis Configuration Template
+# Copy this file and customize for your city's analysis requirements
+
+analysis:
+  # Analysis name and description
+  name: "YourCity Urban Analysis"
+  description: "Comprehensive urban analysis for YourCity"
+  version: "1.0.0"
+  
+  # Analysis modules to run
+  modules:
+    - "mobility_analysis"
+    - "walkability_analysis"
+    - "green_access_analysis"
+    - "district_ranking"
+    - "custom_analysis"  # Add your city-specific analysis
+  
+  # Data requirements
+  data_requirements:
+    required_layers:
+      - "amenities"
+      - "pt_stops"
+      - "roads"
+      - "landuse"
+      - "buildings"
+      - "districts"
+      - "population"
+    
+    optional_layers:
+      - "cycling_infrastructure"
+      - "green_spaces"
+      - "public_transport_routes"
+      - "elevation"
+      - "air_quality"
+      - "noise_levels"
+
+# Public Transport Analysis
+public_transport:
+  # High-frequency service definition
+  high_frequency_threshold: 15      # minutes (headway maximum)
+  
+  # Peak hours for analysis
+  peak_hours:
+    morning: ["07:00", "09:00"]
+    evening: ["17:00", "19:00"]
+    all_day: ["06:00", "22:00"]
+  
+  # Access distance parameters
+  access_distance: 300              # meters (walking distance to stops)
+  access_distance_cycling: 1000     # meters (cycling distance to stops)
+  
+  # Service quality metrics
+  service_quality:
+    frequency_weight: 0.4           # Weight for frequency analysis
+    coverage_weight: 0.3            # Weight for coverage analysis
+    reliability_weight: 0.3         # Weight for reliability analysis
+  
+  # Mode-specific analysis
+  modes:
+    bus:
+      enabled: true
+      min_frequency: 10             # minutes
+      priority: "high"
+    
+    metro:
+      enabled: true
+      min_frequency: 5              # minutes
+      priority: "high"
+    
+    tram:
+      enabled: true
+      min_frequency: 8              # minutes
+      priority: "medium"
+    
+    train:
+      enabled: true
+      min_frequency: 15             # minutes
+      priority: "medium"
+
+# Walkability Analysis
+walkability:
+  # Point of Interest (POI) access
+  poi_access:
+    distance: 500                   # meters
+    categories:
+      essential_services:
+        - "education"
+        - "healthcare"
+        - "financial"
+        - "food_beverage"
+        - "public_services"
+        weight: 0.4
+    
+      recreation:
+        - "community"
+        - "recreation"
+        - "parks"
+        weight: 0.3
+    
+      transport:
+        - "public_transport"
+        - "bicycle_parking"
+        weight: 0.3
+  
+  # Street network analysis
+  street_network:
+    intersection_buffer: 50         # meters for intersection cleaning
+    sidewalk_analysis: true
+    pedestrian_crossings: true
+    traffic_signals: true
+    
+    # Street type weights
+    street_weights:
+      pedestrian: 1.0
+      residential: 0.8
+      service: 0.6
+      tertiary: 0.4
+      secondary: 0.2
+      primary: 0.1
+  
+  # Safety and comfort
+  safety_comfort:
+    lighting: true
+    sidewalk_width: true
+    tree_coverage: true
+    noise_levels: false  # if data available
+
+# Green Space Analysis
+green_spaces:
+  # Access parameters
+  access_distance: 500              # meters
+  
+  # Green space types
+  types:
+    parks:
+      min_area: 1000                # m²
+      weight: 0.4
+      include_playgrounds: true
+    
+    forests:
+      min_area: 5000                # m²
+      weight: 0.3
+      include_natural_areas: true
+    
+    gardens:
+      min_area: 500                 # m²
+      weight: 0.2
+      include_community_gardens: true
+    
+    water_bodies:
+      min_area: 1000                # m²
+      weight: 0.1
+      include_rivers: true
+  
+  # Quality metrics
+  quality_metrics:
+    size_weight: 0.3
+    accessibility_weight: 0.4
+    connectivity_weight: 0.3
+
+# Cycling Infrastructure Analysis
+cycling:
+  # Infrastructure types
+  infrastructure:
+    dedicated_lanes: true
+    shared_lanes: true
+    bike_paths: true
+    bike_parking: true
+  
+  # Analysis parameters
+  analysis:
+    network_connectivity: true
+    safety_analysis: true
+    parking_analysis: true
+  
+  # Scoring weights
+  weights:
+    network_coverage: 0.4
+    safety: 0.3
+    connectivity: 0.3
+
+# District Ranking Analysis
+district_ranking:
+  # KPI categories and weights
+  kpi_weights:
+    public_transport: 0.35
+    walkability: 0.30
+    green_access: 0.20
+    cycling: 0.15
+  
+  # Ranking methodology
+  methodology:
+    normalization: "min_max"         # min_max, z_score, percentile
+    aggregation: "weighted_sum"     # weighted_sum, geometric_mean
+    
+  # Output formats
+  outputs:
+    rankings: true
+    scores: true
+    maps: true
+    reports: true
+
+# Custom Analysis (City-Specific)
+custom_analysis:
+  # Add your city-specific analysis here
+  # Example for Curitiba:
+  # brt_analysis:
+  #   enabled: true
+  #   brt_routes: true
+  #   station_access: true
+  
+  # Example for Stuttgart:
+  # hill_accessibility:
+  #   enabled: true
+  #   elevation_data: true
+  #   slope_analysis: true
+
+# Output Configuration
+outputs:
+  # Map generation
+  maps:
+    dpi: 300
+    format: "png"
+    colormap: "viridis"
+    include_legend: true
+    legend_position: "inside"
+    include_scale_bar: true
+    include_north_arrow: true
+  
+  # Report generation
+  reports:
+    format: "pdf"
+    language: "en"
+    include_executive_summary: true
+    include_methodology: true
+    include_results: true
+    include_recommendations: true
+  
+  # Data export
+  data_export:
+    formats: ["parquet", "geojson", "csv"]
+    include_metadata: true
+    compression: "gzip"
+    include_processing_log: true
+  
+  # Visualization
+  visualization:
+    charts: true
+    tables: true
+    interactive_maps: false  # if Kepler integration available
+    dashboards: true
+
+# Performance Settings
+performance:
+  # Processing settings
+  parallel_jobs: 4
+  chunk_size: 1000
+  memory_limit: "4GB"
+  
+  # Caching
+  cache_results: true
+  cache_directory: "cache"
+  
+  # Logging
+  logging:
+    level: "INFO"
+    file: "analysis.log"
+    console: true
+    include_timestamps: true
+

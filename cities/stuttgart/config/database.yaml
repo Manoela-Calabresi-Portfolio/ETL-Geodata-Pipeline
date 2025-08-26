@@ -1,0 +1,29 @@
+database:
+  auto_create_database: true
+  auto_initialize_schema: true
+  backup_enabled: true
+  backup_retention_days: 30
+  backup_schedule: daily
+  batch_size: 1000
+  city_schema: stuttgart
+  connection_timeout: 30
+  database: etl_geodata_pipeline
+  drop_tables_on_reset: false
+  enable_performance_monitoring: true
+  enable_query_logging: false
+  enable_spatial_indexing: true
+  host: localhost
+  max_connections: 10
+  password: etl_secure_password_2024
+  port: 5432
+  query_timeout: 300
+  schema: etl_pipeline
+  ssl_cert: ''
+  ssl_key: ''
+  ssl_mode: prefer
+  stuttgart:
+    enable_data_lineage: true
+    enable_district_analysis: true
+    enable_historical_data: true
+    enable_performance_metrics: true
+  user: etl_user

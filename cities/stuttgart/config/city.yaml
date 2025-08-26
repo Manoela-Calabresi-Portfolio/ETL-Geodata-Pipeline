@@ -1,0 +1,58 @@
+# Stuttgart City Configuration
+# Adapted from existing spatial_analysis/config/analysis_config.yaml
+
+city:
+  name: "Stuttgart"
+  full_name: "Stuttgart, Baden-Württemberg, Germany"
+  country: "Germany"
+  state: "Baden-Württemberg"
+  language: "de"
+  timezone: "Europe/Berlin"
+  
+  # Geographic bounds [min_lon, min_lat, max_lon, max_lat]
+  # From existing config: bbox: [9.0, 48.6, 9.4, 48.9]
+  bbox: [9.0, 48.6, 9.4, 48.9]
+  
+  # Coordinate reference systems
+  # From existing config: crs_storage: "EPSG:4326", crs_analysis: "EPSG:25832"
+  crs_storage: "EPSG:4326"      # WGS84 for storage
+  crs_analysis: "EPSG:25832"    # UTM Zone 32N for metric analyses
+  
+  # Population and area info
+  population: 634830             # 2023 estimate
+  area_km2: 207.35              # City area in square kilometers
+  
+  # Urban characteristics
+  urban_type: "major_city"
+  has_metro: true
+  has_tram: true
+  has_bus: true
+  has_brt: false
+  has_bike_sharing: true
+  
+  # Analysis focus areas
+  analysis_focus:
+    - "public_transport"
+    - "walkability"
+    - "green_spaces"
+    - "mobility_accessibility"
+  
+  # Data requirements and sources
+  data_requirements:
+    required_layers:
+      districts:
+        source: "stuttgart_districts.geojson"
+        type: "geojson"
+        description: "Stuttgart administrative districts"
+      amenities:
+        source: "osm_amenities.parquet"
+        type: "parquet"
+        description: "OpenStreetMap amenities data"
+      public_transport:
+        source: "osm_pt_stops.parquet"
+        type: "parquet"
+        description: "Public transport stops"
+      roads:
+        source: "osm_roads.parquet"
+        type: "parquet"
+        description: "Road network data"

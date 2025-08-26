@@ -1,0 +1,111 @@
+# City Template - Add New Cities
+
+## 🏙️ **How to Add a New City**
+
+This template shows you how to add a new city to the ETL Geodata Pipeline.
+
+### **Quick Start**
+
+1. **Copy this template:**
+   ```bash
+   cp -r cities/_template cities/your_city_name
+   ```
+
+2. **Customize configuration:**
+   - Edit `config/city.yaml` with your city's parameters
+   - Edit `config/districts.yaml` with your city's district boundaries
+   - Edit `config/analysis.yaml` with your city's analysis parameters
+
+3. **Add your data:**
+   - Place OSM PBF files in `data/raw/`
+   - Place GTFS files in `data/external/`
+   - Place boundary files in `data/external/`
+
+4. **Customize analysis scripts:**
+   - Modify scripts in `spatial_analysis/scripts/` for city-specific analysis
+   - Update KPI weights in `spatial_analysis/config/kpi_weights.yaml`
+
+5. **Run analysis:**
+   ```bash
+   python cities/your_city_name/spatial_analysis/scripts/your_city_analysis.py
+   ```
+
+### **Template Structure**
+
+```
+cities/your_city_name/
+├── config/                          # City-specific configuration
+│   ├── city.yaml                    # Basic city parameters
+│   ├── districts.yaml               # District definitions
+│   └── analysis.yaml                # Analysis parameters
+├── data/                            # City-specific data
+│   ├── raw/                         # Raw OSM/GTFS data
+│   ├── staging/                     # Intermediate processing
+│   ├── processed/                   # Final processed data
+│   └── outputs/                     # Analysis outputs
+├── spatial_analysis/                # City-specific analysis
+│   ├── scripts/                     # Analysis scripts
+│   ├── config/                      # Analysis configuration
+│   └── outputs/                     # Analysis results
+└── README.md                        # City-specific documentation
+```
+
+### **Required Configuration**
+
+#### **city.yaml**
+```yaml
+city:
+  name: "YourCity"
+  country: "Country"
+  language: "en"  # or local language code
+  timezone: "Timezone"
+  crs_storage: "EPSG:4326"
+  crs_analysis: "EPSG:XXXXX"  # Local UTM zone
+
+bbox: [min_lon, min_lat, max_lon, max_lat]
+
+data_sources:
+  osm_pbf: "data/raw/your-region-latest.osm.pbf"
+  gtfs: "data/external/your-gtfs.zip"
+  boundaries: "data/external/your-boundaries.geojson"
+```
+
+#### **districts.yaml**
+```yaml
+districts:
+  source: "data/external/your-districts.geojson"
+  id_column: "district_id"
+  name_column: "district_name"
+  population_column: "population"
+```
+
+#### **analysis.yaml**
+```yaml
+analysis_parameters:
+  public_transport:
+    high_frequency_threshold: 15  # minutes
+    access_distance: 300          # meters
+  walkability:
+    poi_access_distance: 500      # meters
+  green_spaces:
+    access_distance: 500          # meters
+```
+
+### **Customization Tips**
+
+- **Keep city-specific logic** in your city's analysis scripts
+- **Use shared core classes** from `spatial_analysis_core/` for common functionality
+- **Follow naming conventions** for consistency across cities
+- **Document city-specific requirements** in your README.md
+
+### **Example Cities**
+
+- **Stuttgart**: German city with VVS transport, hilly terrain
+- **Curitiba**: Brazilian city with BRT system, green belt
+- **Your City**: [Add your city's unique characteristics]
+
+### **Need Help?**
+
+- Check existing city examples in `cities/` folder
+- Review shared core documentation in `spatial_analysis_core/`
+- Follow the established patterns for consistency

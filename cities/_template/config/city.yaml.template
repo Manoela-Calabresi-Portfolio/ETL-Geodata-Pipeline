@@ -1,0 +1,124 @@
+# City Configuration Template
+# Copy this file and customize for your city
+
+city:
+  name: "YourCity"                    # City name (e.g., "Curitiba", "Paris")
+  full_name: "Your City Full Name"    # Full city name (e.g., "Curitiba, Paraná, Brazil")
+  country: "Country"                   # Country name
+  state: "State/Province"             # State or province (if applicable)
+  language: "en"                       # Language code (en, pt, de, fr, etc.)
+  timezone: "Timezone"                 # Timezone (e.g., "America/Sao_Paulo")
+  
+  # Geographic bounds [min_lon, min_lat, max_lon, max_lat]
+  bbox: [0.0, 0.0, 0.0, 0.0]
+  
+  # Coordinate reference systems
+  crs_storage: "EPSG:4326"            # Storage CRS (WGS84)
+  crs_analysis: "EPSG:XXXXX"          # Analysis CRS (local UTM zone)
+
+# Data sources
+data_sources:
+  # OSM data source
+  osm_pbf: "data/raw/your-region-latest.osm.pbf"
+  
+  # GTFS data source (if available)
+  gtfs: "data/external/your-gtfs.zip"
+  
+  # Administrative boundaries
+  boundaries: "data/external/your-boundaries.geojson"
+  
+  # District boundaries
+  districts: "data/external/your-districts.geojson"
+  
+  # Population data (if available)
+  population: "data/external/your-population.csv"
+
+# Processing settings
+processing:
+  # Memory and performance settings
+  memory_limit: "4GB"
+  timeout_seconds: 1800
+  chunk_size: 10000
+  
+  # Parallel processing
+  parallel_jobs: 4
+  
+  # Caching
+  cache_results: true
+  
+  # Output formats
+  output_formats: ["parquet", "geojson", "csv"]
+
+# City-specific characteristics
+characteristics:
+  # Urban form
+  urban_form: "grid"                  # grid, organic, mixed
+  
+  # Terrain
+  terrain: "flat"                     # flat, hilly, mountainous
+  
+  # Climate
+  climate: "temperate"                # tropical, temperate, arid
+  
+  # Transport systems
+  transport_systems:
+    - "bus"
+    - "metro"
+    - "bicycle"
+  
+  # Special features
+  special_features:
+    - "green_belt"
+    - "historic_center"
+    - "waterfront"
+
+# Analysis parameters
+analysis_parameters:
+  # Public transport
+  public_transport:
+    high_frequency_threshold: 15      # minutes
+    peak_hours: ["07:00", "09:00", "17:00", "19:00"]
+    access_distance: 300              # meters
+  
+  # Walkability
+  walkability:
+    poi_access_distance: 500          # meters
+    intersection_buffer: 50           # meters
+    sidewalk_analysis: true
+  
+  # Green spaces
+  green_spaces:
+    access_distance: 500              # meters
+    min_area: 1000                   # m²
+    include_parks: true
+    include_forests: true
+  
+  # Cycling
+  cycling:
+    dedicated_lanes: true
+    shared_lanes: true
+    bike_parking: true
+
+# Output settings
+outputs:
+  # Map generation
+  maps:
+    dpi: 300
+    format: "png"
+    colormap: "viridis"
+    include_legend: true
+    legend_position: "inside"
+  
+  # Report generation
+  reports:
+    format: "pdf"
+    language: "en"
+    include_charts: true
+    include_tables: true
+  
+  # Data export
+  data_export:
+    formats: ["parquet", "geojson", "csv"]
+    include_metadata: true
+    compression: "gzip"
+

@@ -1,7 +1,8 @@
 # ETL Geodata Pipeline - Comprehensive Documentation
 
 **Author:** Manoela Calabresi, Urban Planner & Spatial Analyst  
-**LinkedIn:** [https://www.linkedin.com/in/manoela-calabresi/](https://www.linkedin.com/in/manoela-calabresi/)
+**LinkedIn:** [https://www.linkedin.com/in/manoela-calabresi/](https://www.linkedin.com/in/manoela-calabresi/)  
+**🟪 Enhanced Architecture with PostGIS Integration**
 
 ## 🔺 Project Overview
 
@@ -17,7 +18,9 @@ The **ETL Geodata Pipeline** is a scalable, city-agnostic system for processing 
 - **🟪 Efficient Processing**: Uses QuackOSM for fast OSM data extraction
 - **🟪 Clean Architecture**: Modular design with clear separation of concerns
 - **🟪 Optimized Storage**: Comprehensive .gitignore prevents large files from cluttering repository
-- **🟪 Database Integration**: DuckDB for efficient data storage and querying
+- **🟪 PostGIS Database**: PostgreSQL with PostGIS extension for spatial data storage
+- **🟪 City-Centric Architecture**: Scalable multi-city structure with shared core
+- **🟪 Professional Workflow**: Urban planning industry-standard tools integration
 - **🟪 OSM Data Integration**: Direct processing of OpenStreetMap data through QuackOSM and PBF files
 
 ---
@@ -65,16 +68,43 @@ ETL-Geodata-Pipeline/
 │   ├── areas/                  # 🟨 City-Specific Configurations
 │   │   └── stuttgart.yaml      # Stuttgart parameters
 │   └── EXECUTION_ORDER.md      # 🔻 Detailed execution guide
-├── spatial_analysis/           # 🔺 Multi-City Analysis Pipeline
+├── cities/                     # 🟪 City-Centric Architecture
+│   ├── _template/              # 🟪 Template for new cities
+│   │   ├── config/             # Configuration templates
+│   │   │   ├── city.yaml       # City parameters template
+│   │   │   ├── districts.yaml  # Districts configuration
+│   │   │   ├── analysis.yaml   # Analysis settings
+│   │   │   └── database.yaml   # Database connection
+│   │   ├── spatial_analysis/   # City-specific analysis
+│   │   └── README.md.template  # Documentation template
+│   ├── stuttgart/              # 🟨 Stuttgart City Module
+│   │   ├── config/             # Stuttgart configurations
+│   │   ├── spatial_analysis/   # Stuttgart analysis scripts
+│   │   └── README.md           # Stuttgart documentation
+│   └── curitiba/               # 🟨 Curitiba City Module
+│       ├── config/             # Curitiba configurations
+│       ├── spatial_analysis/   # Curitiba analysis scripts
+│       └── README.md           # Curitiba documentation
+├── spatial_analysis_core/      # 🔺 Shared Analysis Core
+│   ├── __init__.py             # Core module exports
+│   ├── base_analysis.py        # Abstract base class
+│   ├── data_loader.py          # Multi-source data loader
+│   ├── visualization_base.py   # Common visualization methods
+│   ├── database/               # 🟪 PostGIS Integration
+│   │   ├── postgis_client.py   # PostGIS client
+│   │   ├── database_manager.py # Database management
+│   │   └── data_persistence.py # Data storage layer
+│   └── README.md               # Core documentation
+├── spatial_analysis/           # 🔻 Legacy Multi-City Analysis (Parallel)
 │   ├── config/                 # 🟪 Analysis configuration
-│   ├── scripts/                # 🟣 Reusable pipeline (1,2,3)
+│   ├── scripts/                # 🔻 Reusable pipeline (1,2,3)
 │   │   ├── 1_data_collection.py    # Data collection & processing
 │   │   ├── 2_kpi_calculation.py    # KPI computation
 │   │   └── 3_visualization.py      # Map generation & dashboards
 │   ├── data/                   # 🟨 Multi-city data structure
 │   │   └── stuttgart/          # City-specific data
 │   ├── areas/                  # 🟨 Geographic definitions
-│   └── spatialviz/             # 🟣 All visualization & outputs
+│   └── spatialviz/             # 🔻 All visualization & outputs
 │       ├── map_generators/     # Map creation scripts
 │       ├── outputs/            # Generated maps & dashboards
 │       └── utils/              # Visualization utilities
@@ -86,6 +116,9 @@ ETL-Geodata-Pipeline/
 │       └── maps/
 │           ├── clean/         # Clean, readable maps
 │           └── detailed/      # Comprehensive thematic maps
+├── credentials/                # 🟪 Secure Database Credentials
+│   ├── database_credentials.yaml # Database connection (gitignored)
+│   └── README.md              # Credentials management guide
 ├── docs/                      # 🟪 Documentation
 │   ├── README_FINAL.md        # Comprehensive documentation
 │   └── requirements.txt       # Python dependencies
@@ -94,6 +127,35 @@ ETL-Geodata-Pipeline/
 │   └── stuttgart-etl-old/     # Previous system backup
 └── .gitignore                 # 🟪 Comprehensive file filtering
 ```
+
+---
+
+## 🆕 NEW: Enhanced Architecture
+
+### 🏗️ **City-Centric Design**
+The new architecture organizes cities into dedicated modules, each with:
+- **Configuration**: City-specific parameters, districts, analysis settings
+- **Analysis Scripts**: Custom logic for each city's unique characteristics
+- **Documentation**: City-specific guides and examples
+
+### 🧠 **Shared Core Components**
+`spatial_analysis_core/` provides reusable functionality:
+- **BaseCityAnalysis**: Abstract base class for all city analysis
+- **DataLoader**: Multi-source data loading (OSM, APIs, external files)
+- **VisualizationBase**: Common map styling and export capabilities
+- **PostGIS Integration**: Professional spatial database storage
+
+### 🔐 **Professional Database Integration**
+- **PostgreSQL 17** with **PostGIS 3.5** extension
+- **Secure credentials management** (gitignored)
+- **Spatial data storage** with metadata tracking
+- **Data lineage** and version control
+
+### 🚀 **Scalability Features**
+- **Parallel development**: New system runs alongside existing
+- **Template-based onboarding**: Easy addition of new cities
+- **City-specific customization**: Each city can have unique analysis logic
+- **Professional tools**: QGIS integration, Docker support
 
 ---
 
@@ -325,36 +387,34 @@ Each layer has its own categorization rules:
 
 ## 🔺 Adding New Cities
 
-### 1. Create City Configuration
-Create `pipeline/areas/your_city.yaml`:
-```yaml
-area:
-  name: "YourCity"
-  full_name: "Your City Name"
-  country: "Country"
+### 🟪 Template-Based Setup
+1. **Copy Template**: `cp -r cities/_template cities/your_city_name`
+2. **Configure City**: Edit `cities/your_city_name/config/city.yaml`
+3. **Set Bounding Box**: Define your city's geographic extent
+4. **Customize Analysis**: Implement city-specific logic in `spatial_analysis/`
+5. **Run Pipeline**: Execute the standard pipeline steps
 
-bbox: [min_lon, min_lat, max_lon, max_lat]
+### Configuration Files
+- **`city.yaml`**: City name, bbox, CRS, data sources
+- **`districts.yaml`**: Administrative boundaries and population data
+- **`analysis.yaml`**: Analysis modules and parameters
+- **`database.yaml`**: Database connection settings
 
-data_sources:
-  osm_pbf: "data_final/your_city/raw/region-latest.osm.pbf"
+### 🟪 City-Specific Analysis
+Each city can implement custom analysis logic:
+```python
+from spatial_analysis_core import BaseCityAnalysis
+
+class YourCityAnalysis(BaseCityAnalysis):
+    def run_city_analysis(self):
+        # Your city's unique analysis logic
+        return {'custom_metric': 42}
 ```
 
-### 2. Download OSM Data
-```bash
-# Create directory
-mkdir -p data_final/your_city/raw
-
-# Download PBF file (example for Germany)
-wget -O data_final/your_city/raw/region-latest.osm.pbf \
-  https://download.geofabrik.de/europe/germany-latest.osm.pbf
-```
-
-### 3. Run Pipeline
-```bash
-python pipeline/scripts/extract_quackosm.py --city your_city
-python pipeline/scripts/process_layers.py --city your_city
-python pipeline/scripts/create_clean_maps.py
-```
+### 🔺 Legacy Method (Still Supported)
+1. **Create City Configuration**: `pipeline/areas/your_city.yaml`
+2. **Download OSM Data**: PBF file to `data_final/your_city/raw/`
+3. **Run Pipeline**: Standard ETL pipeline execution
 
 ---
 
@@ -366,7 +426,9 @@ python pipeline/scripts/create_clean_maps.py
 - **GeoPandas** - Geospatial data processing
 - **Matplotlib** - Map visualization
 - **PyYAML** - Configuration management
-- **DuckDB** - High-performance analytical database
+- **🟪 PostgreSQL 17** - Professional relational database
+- **🟪 PostGIS 3.5** - Spatial database extension
+- **🔺 DuckDB** - High-performance analytical database (legacy)
 - **Parquet** - Efficient data storage format
 
 ### ETL Development Expertise
@@ -397,6 +459,28 @@ Map Generation → PNG Visualizations
 - **🔺 Configuration Management**: YAML-based system configuration
 - **🔺 Error Handling**: Comprehensive error tracking and debugging
 - **🔺 Testing & Validation**: Automated pipeline testing and smoke tests
+
+---
+
+## 🟪 Current Status & Next Steps
+
+### ✅ **Completed**
+- **PostGIS Database**: PostgreSQL 17 with PostGIS 3.5 extension
+- **City-Centric Architecture**: Template-based city organization
+- **Shared Core**: Reusable analysis components
+- **Stuttgart Migration**: New structure created and tested
+- **Database Integration**: All schemas and users configured
+
+### 🚧 **In Progress**
+- **Stuttgart Analysis**: Implementing real analysis methods
+- **Data Migration**: Moving from legacy to new system
+- **QGIS Integration**: Professional visualization tools
+
+### 🎯 **Next Steps**
+- **Complete Stuttgart Migration**: Implement all analysis methods
+- **Curitiba Setup**: Configure and test new city
+- **Docker Containerization**: Cloud deployment preparation
+- **Professional Workflows**: Urban planning industry integration
 
 ---
 

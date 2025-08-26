@@ -1,0 +1,38 @@
+# Stuttgart Districts Configuration
+# Adapted from existing spatial_analysis/config/analysis_config.yaml
+
+districts:
+  # Data source for district boundaries
+  source:
+    type: "external_api"
+    url: "https://www.stuttgart.de/open-data/stadtbezirke.geojson"
+    format: "geojson"
+    crs: "EPSG:4326"
+    
+    # Fallback local file if API is unavailable
+    fallback:
+      type: "local_file"
+      path: "data/external/stadtbezirke.geojson"
+      format: "geojson"
+      crs: "EPSG:4326"
+  
+  # District processing parameters
+  processing:
+    simplify_tolerance: 10        # meters for geometry simplification
+    buffer_distance: 50          # meters for boundary buffering
+    min_area: 1000               # m² minimum area for valid districts
+    
+  # District-specific analysis
+  analysis:
+    population_source: "data/external/population_by_district.csv"
+    population_column: "population"
+    district_id_column: "stadtbezirk_id"
+    district_name_column: "stadtbezirk_name"
+    
+  # District categories for analysis
+  categories:
+    urban_center: ["Mitte", "Nord", "Ost", "Süd", "West"]
+    residential: ["Bad Cannstatt", "Degerloch", "Feuerbach", "Möhringen", "Plieningen", "Sillenbuch", "Stammheim", "Untertürkheim", "Vaihingen", "Wangen", "Weilimdorf", "Zuffenhausen"]
+    industrial: ["Feuerbach", "Untertürkheim", "Zuffenhausen"]
+    green_areas: ["Degerloch", "Möhringen", "Plieningen", "Sillenbuch", "Stammheim", "Vaihingen", "Wangen"]
+
