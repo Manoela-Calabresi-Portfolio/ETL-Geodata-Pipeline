@@ -23,11 +23,13 @@ from h3_utils import hex_polygon
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Updated paths to match current project structure
-DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
+DATA_DIR = Path("../data")
 
 def get_next_output_dir():
     """Get the next available output directory in the series"""
-    outputs_base = Path("outputs")
+    # Use absolute path to ensure outputs go to the right place
+    script_dir = Path(__file__).parent
+    outputs_base = script_dir.parent / "outputs"
     if not outputs_base.exists():
         outputs_base.mkdir(parents=True, exist_ok=True)
     
@@ -1149,15 +1151,8 @@ def main():
     print("🗺️ Generating map 15: Infrastructure quality score...")
     map_15_infrastructure_quality(d_kpi, layers, extent)
     
-    # Generate comprehensive maps for Kepler data
-    print("\n🗺️ Generating comprehensive Kepler data maps...")
-    map_16_landuse_comprehensive(d_kpi, layers["landuse"], extent)
-    map_17_road_network_comprehensive(d_kpi, layers["roads"], extent)
-    map_18_pt_stops_comprehensive(d_kpi, layers["pt_stops"], extent)
-    map_19_h3_population_comprehensive(d_kpi, layers["h3_pop"], extent)
-    map_20_districts_kpi_comprehensive(d_kpi, extent)
-    
     # Export Kepler layers
+    print("\n📊 Exporting data for Kepler.gl...")
     export_kepler_layers(layers, d_kpi)
     
     # Create run info file
@@ -1167,11 +1162,10 @@ def main():
         "run_number": RUN_NUMBER,
         "timestamp": datetime.now().isoformat(),
         "output_directory": str(OUTPUT_BASE),
-        "maps_generated": 20,  # 8 basic + 3 advanced H3 + 5 infrastructure + 4 comprehensive
+        "maps_generated": 15,  # 8 basic + 3 advanced H3 + 4 infrastructure
         "kepler_layers_exported": True,
         "advanced_h3_maps": True,
         "infrastructure_analysis": True,
-        "comprehensive_kepler_maps": True,
         "districts_count": len(d_kpi),
         "total_population": int(d_kpi['population'].sum()),
         "total_green_area_km2": float(d_kpi['green_area_km2'].sum()),
@@ -1181,7 +1175,7 @@ def main():
     with open(OUTPUT_BASE / "run_info.json", 'w') as f:
         json.dump(run_info, f, indent=2)
     
-    print("\n🎉 All 20 maps generated successfully!")
+    print("\n🎉 All 15 maps generated successfully!")
     print(f"📁 Check outputs in: {OUT_DIR}")
     print(f"📁 Check Kepler data in: {KEPLER_DIR}")
     print(f"📊 Run info saved: {OUTPUT_BASE / 'run_info.json'}")

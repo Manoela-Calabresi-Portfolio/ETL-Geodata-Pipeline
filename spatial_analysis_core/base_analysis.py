@@ -49,6 +49,10 @@ class BaseCityAnalysis(ABC):
         self.data_loader = DataLoader(city_config)
         self.visualizer = VisualizationBase(city_config)
         
+        # Setup output directory
+        self.output_dir = Path(f"cities/{self.city_name}/spatial_analysis/outputs")
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
         # Setup logging for this city
         self._setup_logging()
         
