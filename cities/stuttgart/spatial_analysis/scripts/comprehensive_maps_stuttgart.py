@@ -28,7 +28,7 @@ from h3_utils import hex_polygon
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Constants
-DATA_DIR = Path("../data")
+DATA_DIR = Path("../../../main_pipeline/areas/stuttgart/data_final")
 PLOT_CRS = 3857
 H3_RES = 8
 
@@ -259,13 +259,13 @@ def map_04_pt_modal_gravity_h3(layers, extent):
     h3_gdf = gpd.GeoDataFrame(layers["h3_pop"], geometry=h3_polys, crs=4326).to_crs(PLOT_CRS)
     
     # Calculate PT gravity (simplified: PT stops per H3 cell)
-    pt_plot = layers["pt_stops"].to_crs(PLOT_CRS)
-    pt_joined = gpd.sjoin(pt_plot, h3_gdf, how='right', predicate='within')
-    if 'index_right' in pt_joined.columns:
-        pt_counts = pt_joined.groupby(pt_joined['index_right']).size().fillna(0)
-    else:
-        pt_counts = pt_joined.groupby(pt_joined.index).size().fillna(0)
-    h3_gdf['pt_gravity'] = pt_counts
+        pt_plot = layers["pt_stops"].to_crs(PLOT_CRS)
+        pt_joined = gpd.sjoin(pt_plot, h3_gdf, how='right', predicate='within')
+        if 'index_right' in pt_joined.columns:
+            pt_counts = pt_joined.groupby(pt_joined['index_right']).size().fillna(0)
+        else:
+            pt_counts = pt_joined.groupby(pt_joined.index).size().fillna(0)
+        h3_gdf['pt_gravity'] = pt_counts
     
     # Plot H3 PT gravity
     h3_gdf.plot(ax=ax, column='pt_gravity', cmap='Reds', alpha=0.8, legend=True)
@@ -357,11 +357,7 @@ def map_06_service_diversity_h3(layers, extent):
     amen_joined = gpd.sjoin(amenities_plot, h3_gdf, how='right', predicate='within')
     
     # Count unique categories per H3 cell
-    # Handle different spatial join column names
-    if 'index_right' in amen_joined.columns:
-        diversity = amen_joined.groupby(amen_joined.index_right)['category'].nunique().fillna(0)
-    else:
-        diversity = amen_joined.groupby(amen_joined.index)['category'].nunique().fillna(0)
+    diversity = amen_joined.groupby(amen_joined.index_right)['category'].nunique().fillna(0)
     h3_gdf['service_diversity'] = diversity
     
     # Plot H3 service diversity

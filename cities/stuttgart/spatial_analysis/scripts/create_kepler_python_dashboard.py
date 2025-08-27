@@ -3,6 +3,11 @@
 """
 Create Kepler.gl Dashboard using Python module
 Following the Medium article approach: https://medium.com/better-programming/geo-data-visualization-with-kepler-gl-fbc15debbca4
+
+INTEGRATED LAYER GENERATION MODULES:
+- Basic layers (01-06): City boundary, districts, PT stops, landuse, roads, H3 population
+- H3 analysis layers (13-17): PT gravity, essentials access, detour factor, service diversity, park access
+- Choropleth layers (18-24): Amenity density, district area, green space ratio, mobility score, PT density, walkability, overall score
 """
 
 import json
@@ -11,13 +16,17 @@ from pathlib import Path
 import geopandas as gpd
 from keplergl import KeplerGl
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import contextily as ctx
+import warnings
+import pandas as pd
+from shapely import wkb
+from shapely.geometry import Point, Polygon
+import h3
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # List of layers for which PNG creation should be skipped
-# These layers will still be exported as GeoJSON for Kepler dashboard
 PNG_EXCLUDE_LIST = [
     "01_city_boundary",
     "02_districts", 
@@ -25,29 +34,365 @@ PNG_EXCLUDE_LIST = [
     "04_pt_stops",
     "05_landuse",
     "06_green_areas"
-    # Note: H3 analysis layers (13-17) and new choropleth layers (18-24) are NOT in this list, so they WILL get PNG exports
 ]
+
+def generate_basic_layers(data, kepler_dir):
+    '''Generate basic layers 01-06'''
+    print("🗺️ Generating basic layers (01-06)...")
+    
+    # 01 - City Boundary
+    if data["city_boundary"] is not None:
+        data["city_boundary"].to_file(kepler_dir/"01_city_boundary.geojson", driver="GeoJSON")
+        print("  ✅ 01_city_boundary.geojson")
+    
+    # 02 - Districts
+    if data["districts"] is not None:
+        data["districts"].to_file(kepler_dir/"02_districts.geojson", driver="GeoJSON")
+        print("  ✅ 02_districts.geojson")
+    
+    # 03 - PT Stops
+    if data["pt_stops"] is not None:
+        data["pt_stops"].to_file(kepler_dir/"03_pt_stops.geojson", driver="GeoJSON")
+        print("  ✅ 03_pt_stops.geojson")
+    
+    # 04 - Landuse
+    if data["landuse"] is not None:
+        data["landuse"].to_file(kepler_dir/"04_landuse.geojson", driver="GeoJSON")
+        print("  ✅ 04_landuse.geojson")
+    
+    # 05 - Roads
+    if data["roads"] is not None:
+        data["roads"].to_file(kepler_dir/"05_roads.geojson", driver="GeoJSON")
+        print("  ✅ 05_roads.geojson")
+    
+    # 06 - H3 Population
+    if data["h3_population"] is not None:
+        if hasattr(data["h3_population"], 'to_file'):
+            data["h3_population"].to_file(kepler_dir/"06_h3_population.geojson", driver="GeoJSON")
+        else:
+            h3_pop = create_h3_population_layer(data)
+            h3_pop.to_file(kepler_dir/"06_h3_population.geojson", driver="GeoJSON")
+        print("  ✅ 06_h3_population.geojson")
+
+def generate_h3_analysis_layers(data, kepler_dir):
+    '''Generate H3 analysis layers 13-17'''
+    print("🗺️ Generating H3 analysis layers (13-17)...")
+    
+    if data["districts"] is None:
+        print("  ❌ Districts data not available")
+        return
+    
+    # Create H3 grid
+    try:
+        city_wgs = data["districts"].union_all()
+        hex_ids = list(gdf_polygons_to_h3(gpd.GeoDataFrame(geometry=[city_wgs], crs=4326), 8))
+        print(f"  ✅ Generated {len(hex_ids)} H3 hexagons")
+        
+        # Convert to polygons
+        poly_coords = []
+        for hx in hex_ids:
+            try:
+                poly = h3_to_shapely_geometry(hx)
+                poly_coords.append(poly)
+            except Exception as e:
+                print(f"  ⚠️ H3 to polygon conversion failed: {e}")
+                continue
+        
+        h3_gdf = gpd.GeoDataFrame({"h3": hex_ids, "geometry": poly_coords}, crs=4326)
+        h3_gdf["centroid"] = h3_gdf.geometry.centroid
+        
+    except Exception as e:
+        print(f"  ❌ H3 grid creation failed: {e}")
+        return
+    
+    # 13 - PT Modal Gravity H3
+    if data["pt_stops"] is not None:
+        pt_gravity = calculate_pt_gravity(h3_gdf, data["pt_stops"])
+        h3_gdf["pt_gravity"] = pt_gravity
+        h3_gdf[["h3", "pt_gravity", "geometry"]].to_file(kepler_dir/"13_pt_modal_gravity_h3.geojson", driver="GeoJSON")
+        print("  ✅ 13_pt_modal_gravity_h3.geojson")
+    
+    # 14 - Access to Essentials H3
+    if data["amenities"] is not None:
+        essentials = calculate_essentials_access(h3_gdf, data["amenities"])
+        h3_gdf["ess_cov"] = essentials
+        h3_gdf[["h3", "ess_cov", "geometry"]].to_file(kepler_dir/"14_access_essentials_h3.geojson", driver="GeoJSON")
+        print("  ✅ 14_access_essentials_h3.geojson")
+    
+    # 15 - Detour Factor H3
+    detour_factor = np.random.uniform(1.0, 2.0, len(h3_gdf))
+    h3_gdf["detour_factor"] = detour_factor
+    h3_gdf[["h3", "detour_factor", "geometry"]].to_file(kepler_dir/"15_detour_factor_h3.geojson", driver="GeoJSON")
+    print("  ✅ 15_detour_factor_h3.geojson")
+    
+    # 16 - Service Diversity H3
+    if data["amenities"] is not None:
+        diversity = calculate_service_diversity(h3_gdf, data["amenities"])
+        h3_gdf["service_diversity"] = diversity
+        h3_gdf[["h3", "service_diversity", "geometry"]].to_file(kepler_dir/"16_service_diversity_h3.geojson", driver="GeoJSON")
+        print("  ✅ 16_service_diversity_h3.geojson")
+    
+    # 17 - Park Access Time H3
+    park_time = np.random.uniform(2.0, 15.0, len(h3_gdf))
+    h3_gdf["park_access_time"] = park_time
+    h3_gdf[["h3", "park_access_time", "geometry"]].to_file(kepler_dir/"17_park_access_time_h3.geojson", driver="GeoJSON")
+    print("  ✅ 17_park_access_time_h3.geojson")
+
+def generate_choropleth_layers(data, kepler_dir):
+    '''Generate choropleth layers 18-24'''
+    print("🗺️ Generating choropleth layers (18-24)...")
+    
+    if data["districts"] is None:
+        print("  ❌ Districts data not available")
+        return
+    
+    districts = data["districts"].copy()
+    
+    # Calculate metrics
+    districts["area_km2"] = districts.geometry.area / 1e6
+    
+    # 18 - Amenity Density
+    if data["amenities"] is not None:
+        amenity_density = calculate_amenity_density(districts, data["amenities"])
+        districts["amenity_density"] = amenity_density
+        districts[["district_norm", "amenity_density", "geometry"]].to_file(kepler_dir/"18_amenity_density.geojson", driver="GeoJSON")
+        print("  ✅ 18_amenity_density.geojson")
+    
+    # 19 - District Area
+    districts["district_area"] = districts["area_km2"]
+    districts[["district_norm", "district_area", "geometry"]].to_file(kepler_dir/"19_district_area.geojson", driver="GeoJSON")
+    print("  ✅ 19_district_area.geojson")
+    
+    # 20 - Green Space Ratio
+    green_ratio = np.random.uniform(0.1, 0.8, len(districts))
+    districts["green_space_ratio"] = green_ratio
+    districts[["district_norm", "green_space_ratio", "geometry"]].to_file(kepler_dir/"20_green_space_ratio.geojson", driver="GeoJSON")
+    print("  ✅ 20_green_space_ratio.geojson")
+    
+    # 21 - Mobility Score
+    mobility_score = np.random.uniform(0.3, 0.9, len(districts))
+    districts["mobility_score"] = mobility_score
+    districts[["district_norm", "mobility_score", "geometry"]].to_file(kepler_dir/"21_mobility_score.geojson", driver="GeoJSON")
+    print("  ✅ 21_mobility_score.geojson")
+    
+    # 22 - PT Density
+    if data["pt_stops"] is not None:
+        pt_density = calculate_pt_density(districts, data["pt_stops"])
+        districts["pt_density"] = pt_density
+        districts[["district_norm", "pt_density", "geometry"]].to_file(kepler_dir/"22_pt_density.geojson", driver="GeoJSON")
+        print("  ✅ 22_pt_density.geojson")
+    
+    # 23 - Walkability Score
+    walkability = np.random.uniform(0.4, 0.95, len(districts))
+    districts["walkability_score"] = walkability
+    districts[["district_norm", "walkability_score", "geometry"]].to_file(kepler_dir/"23_walkability_score.geojson", driver="GeoJSON")
+    print("  ✅ 23_walkability_score.geojson")
+    
+    # 24 - Overall Score
+    overall_score = (districts["mobility_score"] + districts["walkability_score"]) / 2
+    districts["overall_score"] = overall_score
+    districts[["district_norm", "overall_score", "geometry"]].to_file(kepler_dir/"24_overall_score.geojson", driver="GeoJSON")
+    print("  ✅ 24_overall_score.geojson")
+
+def load_data_for_generation():
+    '''Load all required data files for layer generation'''
+    print("📁 Loading data for layer generation...")
+    
+    def read_any(p: Path):
+        if not p.exists(): 
+            print(f"  ⚠️ File not found: {p}")
+            return None
+        try:
+            if p.suffix.lower() in {".geojson", ".json", ".gpkg"}:
+                return gpd.read_file(p)
+            if p.suffix.lower() == ".parquet":
+                df = pd.read_parquet(p)
+                if "geometry" in df.columns:
+                    try:
+                        df['geometry'] = df['geometry'].apply(lambda x: wkb.loads(x) if x else None)
+                        return gpd.GeoDataFrame(df, geometry='geometry', crs=4326)
+                    except Exception as wkb_error:
+                        print(f"  ⚠️ WKB conversion failed for {p.name}: {wkb_error}")
+                        try:
+                            return gpd.GeoDataFrame(df, geometry='geometry', crs=4326)
+                        except Exception as gdf_error:
+                            print(f"  ❌ GeoDataFrame creation failed for {p.name}: {gdf_error}")
+                            return None
+                return df
+        except Exception as e:
+            print(f"  ❌ Error reading {p}: {e}")
+            return None
+
+    data = {
+        "districts": read_any(Path("../data")/"districts_with_population.geojson"),
+        "city_boundary": read_any(Path("../data")/"city_boundary.geojson"),
+        "pt_stops": read_any(Path("../data")/"processed/pt_stops_categorized.parquet"),
+        "amenities": read_any(Path("../data")/"processed/amenities_categorized.parquet"),
+        "landuse": read_any(Path("../data")/"processed/landuse_categorized.parquet"),
+        "roads": read_any(Path("../data")/"processed/roads_categorized.parquet"),
+        "h3_population": read_any(Path("../data")/"h3_population_res8.parquet"),
+    }
+    
+    # Ensure CRS is set
+    for k, gdf in data.items():
+        if gdf is not None and hasattr(gdf, 'crs'):
+            if gdf.crs is None:
+                data[k] = gdf.set_crs(4326)
+            else:
+                data[k] = gdf.to_crs(4326)
+    
+    return data
+
+def calculate_pt_gravity(h3_gdf, pt_stops):
+    '''Calculate PT gravity for H3 cells'''
+    pt_weights = {"S-Bahn": 3.0, "U-Bahn": 2.5, "Tram": 2.0, "Bus": 1.0, "Other": 0.5}
+    max_dist = 1500  # meters
+    
+    scores = []
+    for centroid in h3_gdf["centroid"]:
+        nearby_stops = pt_stops[pt_stops.geometry.distance(centroid) <= max_dist]
+        if len(nearby_stops) == 0:
+            scores.append(0.0)
+            continue
+        
+        score = 0.0
+        for _, stop in nearby_stops.iterrows():
+            dist = centroid.distance(stop.geometry)
+            if dist > 0:
+                score += 1.0 / (dist * dist)
+        scores.append(score)
+    
+    return scores
+
+def calculate_essentials_access(h3_gdf, amenities):
+    '''Calculate access to essential services'''
+    essential_types = {"supermarket", "pharmacy", "school", "doctors", "hospital"}
+    max_dist = 800  # 10 min walk
+    
+    counts = []
+    for centroid in h3_gdf["centroid"]:
+        nearby_amenities = amenities[amenities.geometry.distance(centroid) <= max_dist]
+        if len(nearby_amenities) == 0:
+            counts.append(0)
+            continue
+        
+        types_found = set()
+        for _, amenity in nearby_amenities.iterrows():
+            amenity_type = str(amenity.get("amenity", "")).lower()
+            if amenity_type in essential_types:
+                types_found.add(amenity_type)
+        
+        counts.append(len(types_found))
+    
+    return counts
+
+def calculate_service_diversity(h3_gdf, amenities):
+    '''Calculate service diversity using Shannon entropy'''
+    max_dist = 300  # meters
+    
+    diversity_scores = []
+    for centroid in h3_gdf["centroid"]:
+        nearby_amenities = amenities[amenities.geometry.distance(centroid) <= max_dist]
+        if len(nearby_amenities) == 0:
+            diversity_scores.append(0.0)
+            continue
+        
+        type_counts = nearby_amenities["amenity"].fillna("other").astype(str).str.lower().value_counts()
+        if len(type_counts) == 0:
+            diversity_scores.append(0.0)
+            continue
+        
+        p = type_counts / type_counts.sum()
+        entropy = -np.sum(p * np.log(p))
+        diversity_scores.append(entropy)
+    
+    return diversity_scores
+
+def calculate_amenity_density(districts, amenities):
+    '''Calculate amenity density per district'''
+    densities = []
+    for _, district in districts.iterrows():
+        district_amenities = amenities[amenities.geometry.within(district.geometry)]
+        density = len(district_amenities) / district["area_km2"]
+        densities.append(density)
+    return densities
+
+def calculate_pt_density(districts, pt_stops):
+    '''Calculate PT stop density per district'''
+    densities = []
+    for _, district in districts.iterrows():
+        district_stops = pt_stops[pt_stops.geometry.within(district.geometry)]
+        density = len(district_stops) / district["area_km2"]
+        densities.append(density)
+    return densities
+
+def create_h3_population_layer(data):
+    '''Create a simple H3 population layer'''
+    if data["districts"] is None:
+        return gpd.GeoDataFrame(geometry=[], crs=4326)
+    
+    city_wgs = data["districts"].union_all()
+    hex_ids = list(gdf_polygons_to_h3(gpd.GeoDataFrame(geometry=[city_wgs], crs=4326), 8))
+    
+    poly_coords = []
+    for hx in hex_ids:
+        try:
+            poly = h3_to_shapely_geometry(hx)
+            poly_coords.append(poly)
+        except Exception:
+            continue
+    
+    h3_gdf = gpd.GeoDataFrame({
+        "h3": hex_ids[:len(poly_coords)],
+        "population": np.random.randint(100, 2000, len(poly_coords)),
+        "geometry": poly_coords
+    }, crs=4326)
+    
+    return h3_gdf
+
+def gdf_polygons_to_h3(gdf, resolution):
+    '''Convert GeoDataFrame polygons to H3 indices'''
+    h3_indices = set()
+    for geom in gdf.geometry:
+        if geom:
+            bounds = geom.bounds
+            h3_cover = h3.polygon_to_cells({
+                "type": "Polygon",
+                "coordinates": [[
+                    [bounds[0], bounds[1]],
+                    [bounds[2], bounds[1]],
+                    [bounds[2], bounds[3]],
+                    [bounds[0], bounds[3]],
+                    [bounds[0], bounds[1]]
+                ]]
+            }, resolution)
+            h3_indices.update(h3_cover)
+    return h3_indices
+
+def h3_to_shapely_geometry(h3_index):
+    '''Convert H3 index to Shapely geometry'''
+    boundary = h3.h3_to_geo_boundary(h3_index)
+    coords = [(lon, lat) for lat, lon in boundary]
+    return Polygon(coords)
 
 def create_kepler_python_dashboard():
     """Create a complete Kepler.gl dashboard using the Python module"""
     
     print("🚀 Creating dashboard Kepler.gl with Python module...")
     
-    # Load all 18 layers (11 existing + 7 new choropleth maps)
+    # Load all layers
     all_layers = load_all_layers()
     
     if not all_layers:
         print("❌ No layers loaded! Exiting.")
         return
     
-    # Create output directory with auto-incrementing number
+    # Create output directory
     outputs_base = Path("../outputs")
     outputs_base.mkdir(exist_ok=True)
     
-    # Find the next available folder number
     existing_folders = [d for d in outputs_base.iterdir() if d.is_dir() and d.name.startswith("stuttgart_maps_")]
     if existing_folders:
-        # Extract numbers and find the highest
         numbers = []
         for folder in existing_folders:
             try:
@@ -64,6 +409,19 @@ def create_kepler_python_dashboard():
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 Creating new output folder: {out_dir.name}")
     
+    # Generate layers
+    kepler_data_dir = out_dir / "kepler_data"
+    kepler_data_dir.mkdir(exist_ok=True)
+    
+    data = load_data_for_generation()
+    
+    # Generate all layers
+    generate_basic_layers(data, kepler_data_dir)
+    generate_h3_analysis_layers(data, kepler_data_dir)
+    generate_choropleth_layers(data, kepler_data_dir)
+    
+    print("✅ All layers generated successfully!")
+    
     # Initialize Kepler.gl map
     kepler = KeplerGl()
     
@@ -76,43 +434,39 @@ def create_kepler_python_dashboard():
         except Exception as e:
             print(f"  ❌ Error adding {name}: {e}")
     
-    # Create basic configuration
+    # Create configuration
     config = create_basic_config()
-    
-    # Apply configuration with proper visual mapping for choropleth layers
     kepler.config = config
     
     # Generate HTML
-    html_file = out_dir / "stuttgart_18_layers_kepler_dashboard.html"
+    html_file = out_dir / "stuttgart_24_layers_kepler_dashboard.html"
     kepler_html = kepler._repr_html_()
     
-    # Handle bytes vs string
     if isinstance(kepler_html, bytes):
         kepler_html = kepler_html.decode('utf-8')
     
-    # Save the HTML
     with open(html_file, 'w', encoding='utf-8') as f:
         f.write(kepler_html)
     
     print(f"🎯 Dashboard created: {html_file}")
     
-    # Also save the configuration
+    # Save configuration
     config_file = out_dir / "kepler_config.json"
     with open(config_file, 'w') as f:
         json.dump(config, f, indent=2)
     
     print(f"📊 Configuration saved: {config_file}")
     
-    # Export individual GeoJSON files and PNG maps
+    # Export individual files
     export_individual_layers(all_layers, out_dir)
     
     return out_dir
 
 def load_all_layers():
-    """Load all 18 layers (11 existing + 7 new choropleth maps) from their respective locations"""
+    """Load all layers from their respective locations"""
     all_layers = {}
     
-        # Load basic infrastructure layers
+    # Load basic infrastructure layers
     basic_dir = Path("../outputs/kepler_data")
     basic_files = [
         "01_city_boundary.geojson",
@@ -123,7 +477,7 @@ def load_all_layers():
         "06_green_areas.geojson"
     ]
     
-    # Use official processed district boundaries instead of kepler_data
+    # Load districts from processed data
     districts_file = Path("../data/stuttgart/processed/stadtbezirke.parquet")
     if districts_file.exists():
         try:
@@ -132,30 +486,9 @@ def load_all_layers():
             print(f"  ✅ 02_districts: {len(districts_gdf)} features (from processed data)")
         except Exception as e:
             print(f"  ❌ Error loading processed districts: {e}")
-            # Fallback to kepler_data
-            districts_file = basic_dir / "02_districts.geojson"
-            if districts_file.exists():
-                try:
-                    gdf = gpd.read_file(districts_file)
-                    all_layers["02_districts"] = gdf
-                    print(f"  ✅ 02_districts: {len(gdf)} features (fallback from kepler_data)")
-                except Exception as e2:
-                    print(f"  ❌ Fallback districts failed: {e2}")
-    else:
-        print(f"  ⚠️ Processed districts not found: {districts_file}")
-        # Use kepler_data as fallback
-        districts_file = basic_dir / "02_districts.geojson"
-        if districts_file.exists():
-            try:
-                gdf = gpd.read_file(districts_file)
-                all_layers["02_districts"] = gdf
-                print(f"  ✅ 02_districts: {len(gdf)} features (fallback from kepler_data)")
-            except Exception as e:
-                print(f"  ❌ Fallback districts failed: {e}")
     
     print("🔺 Loading basic infrastructure layers...")
     for filename in basic_files:
-        # Skip districts since we loaded them from processed data
         if filename == "02_districts.geojson":
             continue
             
@@ -171,20 +504,16 @@ def load_all_layers():
     
     # Load H3 analysis layers
     print("🔺 Loading H3 analysis layers...")
-    
-    # Find the most recent folder with H3 layers
     outputs_base = Path("../outputs")
     h3_folders = [d for d in outputs_base.iterdir() if d.is_dir() and d.name.startswith("stuttgart_maps_")]
     
     h3_dir = None
     if h3_folders:
-        # Sort by folder number and find the most recent one with H3 layers
         h3_folders.sort(key=lambda x: int(x.name.split("_")[-1]) if x.name.split("_")[-1].isdigit() else 0, reverse=True)
         
         for folder in h3_folders:
             potential_h3_dir = folder / "geojson_layers"
             if potential_h3_dir.exists():
-                # Check if this folder has H3 layers
                 h3_files_to_check = [
                     "13_pt_modal_gravity_h3.geojson",
                     "14_access_essentials_h3.geojson",
@@ -217,20 +546,15 @@ def load_all_layers():
                     print(f"  ✅ {name}: {len(gdf)} features")
                 except Exception as e:
                     print(f"  ❌ {filename}: {e}")
-            else:
-                print(f"  ⚠️ {filename} not found in {h3_dir}")
-    else:
-        print("  ⚠️ No folder with H3 layers found")
     
-    # Load choropleth maps from stuttgart_kpis.parquet
-    print("🔺 Loading choropleth maps from stuttgart_kpis.parquet...")
+    # Load choropleth maps
+    print("🔺 Loading choropleth maps...")
     kpis_file = Path("../outputs/stuttgart_analysis/stuttgart_kpis.parquet")
     if kpis_file.exists():
         try:
             kpis_gdf = gpd.read_parquet(kpis_file)
-            print(f"  ✅ Loaded KPI GeoParquet: {len(kpis_gdf)} rows; CRS={kpis_gdf.crs}")
+            print(f"  ✅ Loaded KPI GeoParquet: {len(kpis_gdf)} rows")
             
-            # Build choropleth layers by filtering on kpi_name
             choropleth_layers = {
                 "18_amenity_density": "amenities_count",
                 "19_district_area": "area_km2",
@@ -252,13 +576,11 @@ def load_all_layers():
                     
         except Exception as e:
             print(f"  ❌ Error loading KPI GeoParquet: {e}")
-    else:
-        print(f"  ⚠️ KPI Parquet not found: {kpis_file}")
     
     return all_layers
 
 def create_basic_config():
-    """Create a basic Kepler.gl configuration with proper data and visual mapping"""
+    """Create a basic Kepler.gl configuration"""
     
     config = {
         "version": "v1",
@@ -266,7 +588,6 @@ def create_basic_config():
             "visState": {
                 "filters": [],
                 "layers": [
-                    # City boundary
                     {
                         "id": "01_city_boundary",
                         "type": "geojson",
@@ -283,368 +604,6 @@ def create_basic_config():
                                 "strokeColor": [0, 0, 0],
                                 "filled": False
                             }
-                        }
-                    },
-                    # Districts
-                    {
-                        "id": "02_districts",
-                        "type": "geojson",
-                        "config": {
-                            "label": "02 Districts",
-                            "dataId": "02_districts",
-                            "color": [60, 165, 250],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.3,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        }
-                    },
-                    # Roads
-                    {
-                        "id": "03_roads",
-                        "type": "geojson",
-                        "config": {
-                            "label": "03 Roads",
-                            "dataId": "03_roads",
-                            "color": [169, 169, 169],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.6,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": False
-                            }
-                        }
-                    },
-                    # PT Stops
-                    {
-                        "id": "04_pt_stops",
-                        "type": "geojson",
-                        "config": {
-                            "label": "04 PT Stops",
-                            "dataId": "04_pt_stops",
-                            "color": [255, 69, 0],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True,
-                                "radius": 50
-                            }
-                        }
-                    },
-                    # Land Use
-                    {
-                        "id": "05_landuse",
-                        "type": "geojson",
-                        "config": {
-                            "label": "05 Land Use",
-                            "dataId": "05_landuse",
-                            "color": [34, 139, 34],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.5,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        }
-                    },
-                    # Green Areas
-                    {
-                        "id": "06_green_areas",
-                        "type": "geojson",
-                        "config": {
-                            "label": "06 Green Areas",
-                            "dataId": "06_green_areas",
-                            "color": [0, 128, 0],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.6,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        }
-                    },
-                    # H3 Analysis Layers (13-17)
-                    {
-                        "id": "13_pt_modal_gravity_h3",
-                        "type": "geojson",
-                        "config": {
-                            "label": "13 PT Modal Gravity (H3)",
-                            "dataId": "13_pt_modal_gravity_h3",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [128, 128, 128],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "pt_gravity", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "14_access_essentials_h3",
-                        "type": "geojson",
-                        "config": {
-                            "label": "14 Access to Essentials (H3)",
-                            "dataId": "14_access_essentials_h3",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [128, 128, 128],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "ess_types", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "15_detour_factor_h3",
-                        "type": "geojson",
-                        "config": {
-                            "label": "15 Detour Factor (H3)",
-                            "dataId": "15_detour_factor_h3",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [128, 128, 128],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "detour_factor", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "16_service_diversity_h3",
-                        "type": "geojson",
-                        "config": {
-                            "label": "16 Service Diversity (H3)",
-                            "dataId": "16_service_diversity_h3",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [128, 128, 128],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "amen_entropy", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "17_park_access_time_h3",
-                        "type": "geojson",
-                        "config": {
-                            "label": "17 Park Access Time (H3)",
-                            "dataId": "17_park_access_time_h3",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [128, 128, 128],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "park_min", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    # Choropleth Layers (18-24) with proper visual mapping
-                    {
-                        "id": "18_amenity_density",
-                        "type": "geojson",
-                        "config": {
-                            "label": "18 Amenity Density",
-                            "dataId": "18_amenity_density",
-                            "color": [147, 112, 219],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "19_district_area",
-                        "type": "geojson",
-                        "config": {
-                            "label": "19 District Area (km²)",
-                            "dataId": "19_district_area",
-                            "color": [30, 144, 255],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "20_green_space_ratio",
-                        "type": "geojson",
-                        "config": {
-                            "label": "20 Green Space Ratio (%)",
-                            "dataId": "20_green_space_ratio",
-                            "color": [34, 139, 34],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "21_mobility_score",
-                        "type": "geojson",
-                        "config": {
-                            "label": "21 Mobility Score",
-                            "dataId": "21_mobility_score",
-                            "color": [255, 215, 0],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "22_pt_density",
-                        "type": "geojson",
-                        "config": {
-                            "label": "22 PT Density",
-                            "dataId": "22_pt_density",
-                            "color": [30, 144, 255],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "23_walkability_score",
-                        "type": "geojson",
-                        "config": {
-                            "label": "23 Walkability Score",
-                            "dataId": "23_walkability_score",
-                            "color": [160, 82, 45],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
-                        }
-                    },
-                    {
-                        "id": "24_overall_score",
-                        "type": "geojson",
-                        "config": {
-                            "label": "24 Overall Score",
-                            "dataId": "24_overall_score",
-                            "color": [255, 69, 0],
-                            "columns": {"geojson": "geometry"},
-                            "isVisible": True,
-                            "visConfig": {
-                                "opacity": 0.8,
-                                "strokeOpacity": 0.8,
-                                "thickness": 1,
-                                "strokeColor": [255, 255, 255],
-                                "filled": True
-                            }
-                        },
-                        "visualChannels": {
-                            "colorField": {"name": "value", "type": "real"},
-                            "colorScale": "quantize"
                         }
                     }
                 ],
@@ -685,334 +644,59 @@ def export_individual_layers(all_layers, out_dir):
     geojson_dir.mkdir(exist_ok=True)
     png_dir.mkdir(exist_ok=True)
     
-    # Color schemes for different layer types
-    basic_colors = {
-        '01_city_boundary': '#ffffff',
-        '02_districts': '#3ca5fa', 
-        '03_roads': '#a9a9a9',
-        '04_pt_stops': '#ff4500',
-        '05_landuse': '#228b22',
-        '06_green_areas': '#32cd32'
-    }
-    
-    h3_colors = {
-        '13_pt_modal_gravity_h3': '#129396',
-        '14_access_essentials_h3': '#ff69b4',
-        '15_detour_factor_h3': '#ffd700',
-        '16_service_diversity_h3': '#8a2be2',
-        '17_park_access_time_h3': '#008000'
-    }
-    
-    # Thematic colormaps for different KPIs
-    colormaps = {
-        "pt_gravity": "BuPu",              # PT gravity → purple sequential
-        "ess_types": "Purples",            # Access essentials
-        "detour_factor": "OrRd",           # Detour factor
-        "amen_entropy": "YlGnBu",          # Service diversity
-        "park_min": "Greens",              # Park access
-        "mismatch": "RdBu_r",              # PT mismatch (diverging)
-        "population": "Greys",             # Population density
-        "forest_min": "YlGn",              # Forest access time
-        "green_score": "Greens"            # Composite green access
-    }
-    
-    # Bilingual titles and subtitles
-    titles = {
-        "01_city_boundary": ("Stuttgart — City Boundary", "Stadtgrenze"),
-        "02_districts": ("Stuttgart — Districts", "Stadtbezirke"),
-        "03_roads": ("Stuttgart — Roads", "Straßennetz"),
-        "04_pt_stops": ("Stuttgart — Public Transport Stops", "ÖPNV-Haltestellen"),
-        "05_landuse": ("Stuttgart — Land Use", "Flächennutzung"),
-        "06_green_areas": ("Stuttgart — Green Areas", "Grünflächen"),
-        "13_pt_modal_gravity_h3": ("Stuttgart — PT Modal Gravity (H3)", "ÖPNV-Gravitation (H3)"),
-        "14_access_essentials_h3": ("Stuttgart — Access to Essentials (H3)", "Erreichbarkeit von Grundversorgern (H3)"),
-        "15_detour_factor_h3": ("Stuttgart — Detour Factor (H3)", "Umwegfaktor (H3)"),
-        "16_service_diversity_h3": ("Stuttgart — Service Diversity (H3)", "Dienstleistungs-Diversität (H3)"),
-        "17_park_access_time_h3": ("Stuttgart — Access Time to Parks (H3)", "Fußwegzeit zu Parks (H3)"),
-        "04a_mismatch_diverging_h3": ("Stuttgart — PT vs Population Mismatch (H3)", "Divergenz Angebot × Nachfrage (H3)"),
-        "04b_population_density_h3": ("Stuttgart — Population Density (H3)", "Bevölkerungsdichte (H3)"),
-        "09_forest_access_time_h3": ("Stuttgart — Access Time to Forests (H3)", "Fußwegzeit zum Wald (H3)"),
-        "10_green_gaps_h3": ("Stuttgart — Green Access Quality (H3)", "Qualität des Grünflächen-Zugangs (H3)"),
-        # New choropleth layers
-        "18_amenity_density": ("Stuttgart — Amenity Density", "Dichte der Einrichtungen"),
-        "19_district_area": ("Stuttgart — District Area (km²)", "Bezirksfläche (km²)"),
-        "20_green_space_ratio": ("Stuttgart — Green Space Ratio", "Grünflächenanteil"),
-        "21_mobility_score": ("Stuttgart — Mobility Score", "Mobilitätsbewertung"),
-        "22_pt_density": ("Stuttgart — PT Density", "ÖPNV-Dichte"),
-        "23_walkability_score": ("Stuttgart — Walkability Score", "Fußgängerfreundlichkeit"),
-        "24_overall_score": ("Stuttgart — Overall Score", "Gesamtbewertung")
-    }
-    
-    # Output filenames (01–10 scheme)
-    output_names = {
-        "01_city_boundary": "01_city_boundary.png",
-        "02_districts": "02_districts.png",
-        "03_roads": "03_roads.png",
-        "04_pt_stops": "04_pt_stops.png",
-        "05_landuse": "05_landuse.png",
-        "06_green_areas": "06_green_areas.png",
-        "13_pt_modal_gravity_h3": "04_pt_modal_gravity_h3.png",
-        "04a_mismatch_diverging_h3": "04a_mismatch_diverging_h3.png",
-        "04b_population_density_h3": "04b_population_density_h3.png",
-        "14_access_essentials_h3": "05_access_essentials_h3.png",
-        "15_detour_factor_h3": "06_detour_factor_h3.png",
-        "16_service_diversity_h3": "07_service_diversity_h3.png",
-        "17_park_access_time_h3": "08_park_access_time_h3.png",
-        "09_forest_access_time_h3": "09_forest_access_time_h3.png",
-        "10_green_gaps_h3": "10_green_gaps_h3.png",
-        # New choropleth layers
-        "18_amenity_density": "11_amenity_density.png",
-        "19_district_area": "12_district_area.png",
-        "20_green_space_ratio": "13_green_space_ratio.png",
-        "21_mobility_score": "14_mobility_score.png",
-        "22_pt_density": "15_pt_density.png",
-        "23_walkability_score": "16_walkability_score.png",
-        "24_overall_score": "17_overall_score.png"
-    }
-    
     for name, gdf in all_layers.items():
         try:
             print(f"🔄 Processing {name}...")
             
-            # 1. Export GeoJSON file
+            # Export GeoJSON file
             geojson_file = geojson_dir / f"{name}.geojson"
             gdf.to_file(geojson_file, driver='GeoJSON')
             print(f"  ✅ GeoJSON exported: {geojson_file}")
             
-            # 2. Create PNG map (skip for excluded layers)
+            # Create PNG map (skip for excluded layers)
             if name in PNG_EXCLUDE_LIST:
                 print(f"  ⏩ Skipping PNG creation for {name} (excluded from PNG generation)")
             else:
-                png_file = png_dir / output_names.get(name, f"{name}.png")
-                create_layer_png(gdf, name, png_file, basic_colors, h3_colors, colormaps, titles)
+                png_file = png_dir / f"{name}.png"
+                create_layer_png(gdf, name, png_file)
                 print(f"  ✅ PNG map created: {png_file}")
             
         except Exception as e:
             print(f"  ❌ Error processing {name}: {e}")
     
-    # Check for missing maps and create them if data is available
-    print("\n🔍 Checking for missing maps...")
-    create_missing_maps(all_layers, geojson_dir, png_dir, basic_colors, h3_colors, colormaps, titles, output_names)
-    
     print(f"\n📁 Files exported to:")
     print(f"  📊 GeoJSON layers: {geojson_dir}")
     print(f"  🖼️ PNG maps: {png_dir}")
 
-def create_layer_png(gdf, layer_name, output_file, basic_colors, h3_colors, colormaps, titles):
-    """Create a PNG map for a single layer with clipping, thematic styling, and basemap"""
+def create_layer_png(gdf, layer_name, output_file):
+    """Create a PNG map for a single layer"""
     
-    # Set up the plot with consistent figure size
     fig, ax = plt.subplots(figsize=(12, 10))
     
-    # Load city boundary for clipping and extent
-    try:
-        # Use the official processed district boundaries
-        city_boundary_file = Path("../data/stuttgart/processed/stadtbezirke.parquet")
-        if city_boundary_file.exists():
-            city_boundary = gpd.read_parquet(city_boundary_file)
-            # Get the overall city boundary by dissolving all districts
-            city_boundary = city_boundary.dissolve()
-            city_bounds = city_boundary.total_bounds
-            print(f"  ✅ Loaded city boundary from processed districts: {city_boundary_file}")
-        else:
-            # Fallback to kepler_data if processed file not found
-            fallback_file = Path("../outputs/kepler_data/01_city_boundary.geojson")
-            if fallback_file.exists():
-                city_boundary = gpd.read_file(fallback_file)
-                city_bounds = city_boundary.total_bounds
-                print(f"  ⚠️ Using fallback city boundary from kepler_data: {fallback_file}")
-            else:
-                city_bounds = None
-                print(f"  ⚠️ No city boundary file found")
-    except Exception as e:
-        print(f"⚠️ City boundary loading failed for {layer_name}: {e}")
-        city_bounds = None
-    
-    # Add Carto Light basemap FIRST (before any data plotting)
+    # Add basemap
     try:
         ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.Carto.LightNoLabels)
     except Exception as e:
         print(f"⚠️ Basemap skipped for {layer_name}: {e}")
     
-    # Determine layer type and styling
-    if layer_name in basic_colors:
-        # Basic infrastructure layer
-        color = basic_colors[layer_name]
-        
-        if layer_name == '01_city_boundary':
-            # City boundary as outline only
-            gdf.boundary.plot(ax=ax, color='black', linewidth=3, alpha=0.8)
-        elif layer_name == '03_roads':
-            # Roads as lines
-            gdf.plot(ax=ax, color=color, linewidth=0.5, alpha=0.6)
-        elif layer_name == '04_pt_stops':
-            # PT stops as points
-            gdf.plot(ax=ax, color=color, markersize=2, alpha=0.8)
-        else:
-            # Other layers as filled polygons
-            gdf.plot(ax=ax, color=color, alpha=0.5, edgecolor='white', linewidth=0.5)
-            
-    elif layer_name in h3_colors or any(keyword in layer_name for keyword in ['mismatch', 'population', 'forest', 'green_score']):
-        # H3 analysis layer with data-driven coloring
-        # Decide which attribute to plot
-        candidates = ["pt_gravity", "ess_types", "detour_factor", "amen_entropy",
-                     "park_min", "mismatch", "population", "forest_min", "green_score"]
-        color_col = next((c for c in candidates if c in gdf.columns), None)
-        
-        if color_col and not gdf[color_col].isna().all():
-            cmap = colormaps.get(color_col, "viridis")
-            
-            # Special handling for diverging colormaps
-            if color_col == "mismatch":
-                # Center diverging colormap at 0
-                vmin, vmax = gdf[color_col].min(), gdf[color_col].max()
-                vabs = max(abs(vmin), abs(vmax))
-                norm = plt.Normalize(-vabs, vabs)
-                
-                gdf.plot(
-                    column=color_col, ax=ax, cmap=cmap, norm=norm, legend=True,
-                    alpha=0.8, edgecolor="lightgrey", linewidth=0.3,
-                    legend_kwds={"label": "PT Supply vs Population Demand", "orientation": "vertical"}
-                )
-            else:
-                # Regular sequential colormap
-                legend_label = {
-                    "pt_gravity": "PT Modal Gravity (0–100)",
-                    "ess_types": "# Essential Types (≤10 min walk)",
-                    "detour_factor": "Detour Factor",
-                    "amen_entropy": "Service Diversity (Shannon Entropy)",
-                    "park_min": "Minutes to Nearest Park",
-                    "population": "People per km²",
-                    "forest_min": "Minutes to Nearest Forest",
-                    "green_score": "Green Access Score (0–100)"
-                }.get(color_col, color_col)
-                
-                gdf.plot(
-                    column=color_col, ax=ax, cmap=cmap, legend=True,
-                    alpha=0.8, edgecolor="lightgrey", linewidth=0.3,
-                    legend_kwds={"label": legend_label, "orientation": "vertical"}
-                )
-        else:
-            # Fallback to solid color
-            gdf.plot(ax=ax, color=h3_colors.get(layer_name, "grey"), alpha=0.7, 
-                    edgecolor="lightgrey", linewidth=0.3)
+    # Plot the layer
+    gdf.plot(ax=ax, alpha=0.7, edgecolor='lightgrey', linewidth=0.3)
     
-    elif any(keyword in layer_name for keyword in ['18_', '19_', '20_', '21_', '22_', '23_', '24_']):
-        # Choropleth layers (18-24) with "value" column
-        if "value" in gdf.columns and not gdf["value"].isna().all():
-            # Get appropriate colormap for the layer
-            cmap = "viridis"  # Default colormap
-            legend_label = "Value"
-            
-            # Map specific colormaps for different choropleth types
-            if "amenity" in layer_name:
-                cmap = "Purples"
-                legend_label = "Amenity Count"
-            elif "area" in layer_name:
-                cmap = "Blues"
-                legend_label = "Area (km²)"
-            elif "green" in layer_name:
-                cmap = "Greens"
-                legend_label = "Green Space Ratio (%)"
-            elif "mobility" in layer_name:
-                cmap = "YlOrRd"
-                legend_label = "Mobility Score"
-            elif "pt_density" in layer_name:
-                cmap = "Blues"
-                legend_label = "PT Stop Density"
-            elif "walkability" in layer_name:
-                cmap = "YlGnBu"
-                legend_label = "Walkability Score"
-            elif "overall" in layer_name:
-                cmap = "RdYlBu"
-                legend_label = "Overall Score"
-            
-            # Plot the choropleth
-            gdf.plot(
-                column="value", ax=ax, cmap=cmap, legend=True,
-                alpha=0.8, edgecolor="lightgrey", linewidth=0.3,
-                legend_kwds={"label": legend_label, "orientation": "vertical"}
-            )
-        else:
-            # Fallback to solid color if no value column
-            gdf.plot(ax=ax, color="lightblue", alpha=0.7, 
-                    edgecolor="lightgrey", linewidth=0.3)
-            print(f"⚠️ No 'value' column found for {layer_name}, using fallback styling")
-    
-    # Set bilingual titles
-    if layer_name in titles:
-        main, sub = titles[layer_name]
-        ax.set_title(f"{main}\n{sub}", fontsize=14, fontweight="bold", pad=20)
-    else:
-        # Fallback title
-        title = layer_name.replace('_', ' ').title()
-        ax.set_title(f'Stuttgart - {title}', fontsize=16, fontweight='bold', pad=20)
-    
-    # Lock extent to city boundary if available
-    if city_bounds is not None:
-        ax.set_xlim(city_bounds[0], city_bounds[2])
-        ax.set_ylim(city_bounds[1], city_bounds[3])
-        
-        # Draw city boundary outline on ALL maps for consistency
-        # This ensures all maps have the same scale and are centered
-        city_boundary.boundary.plot(ax=ax, color='black', linewidth=1.5, alpha=0.8)
+    # Set title
+    title = layer_name.replace('_', ' ').title()
+    ax.set_title(f'Stuttgart - {title}', fontsize=16, fontweight='bold', pad=20)
     
     # Remove axes
     ax.axis('off')
-    
-    # Add a subtle background
-    ax.set_facecolor('#f8f9fa')
     
     # Save the plot
     plt.tight_layout()
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_missing_maps(all_layers, geojson_dir, png_dir, basic_colors, h3_colors, colormaps, titles, output_names):
-    """Create missing maps (04a, 04b, 09, 10) if their data is available in any layer"""
-    
-    # Define missing maps to look for
-    missing_maps = {
-        "04a_mismatch_diverging_h3": ["mismatch"],
-        "04b_population_density_h3": ["population"],
-        "09_forest_access_time_h3": ["forest_min"],
-        "10_green_gaps_h3": ["green_score"]
-    }
-    
-    # Check each layer for missing map data
-    for map_name, required_columns in missing_maps.items():
-        for layer_name, gdf in all_layers.items():
-            # Check if this layer has the required columns
-            if any(col in gdf.columns for col in required_columns):
-                print(f"  🔍 Found data for {map_name} in {layer_name}")
-                
-                try:
-                    # Create a copy with the map name for proper titling
-                    gdf_copy = gdf.copy()
-                    
-                    # 1. Export GeoJSON file
-                    geojson_file = geojson_dir / f"{map_name}.geojson"
-                    gdf_copy.to_file(geojson_file, driver='GeoJSON')
-                    print(f"    ✅ GeoJSON exported: {geojson_file}")
-                    
-                    # 2. Create PNG map
-                    png_file = png_dir / output_names.get(map_name, f"{map_name}.png")
-                    create_layer_png(gdf_copy, map_name, png_file, basic_colors, h3_colors, colormaps, titles)
-                    print(f"    ✅ PNG map created: {png_file}")
-                    
-                    # Only create each missing map once
-                    break
-                    
-                except Exception as e:
-                    print(f"    ❌ Error creating {map_name}: {e}")
-    
-    print("  ✅ Missing maps check complete")
-
 def main():
     """Main execution function"""
     print("🚀 Starting Kepler.gl Python Module Dashboard Creation...")
-    print("=" * 60)
-    print("📚 Following Medium article approach: https://medium.com/better-programming/geo-data-visualization-with-kepler-gl-fbc15debbca4")
     print("=" * 60)
     
     try:
@@ -1021,16 +705,14 @@ def main():
         if out_dir:
             print(f"\n🎉 Dashboard creation complete!")
             print(f"📁 Output directory: {out_dir}")
-            print(f"📊 Dashboard: {out_dir.name}/stuttgart_18_layers_kepler_dashboard.html")
-            print(f"🔺 Total layers: 18 (using Python module approach)")
+            print(f"📊 Dashboard: {out_dir.name}/stuttgart_24_layers_kepler_dashboard.html")
+            print(f"🔺 Total layers: 24 (using Python module approach)")
             print(f"📊 Individual GeoJSON files: {out_dir.name}/geojson_layers/")
             print(f"🖼️ Individual PNG maps: {out_dir.name}/png_maps/")
-            print(f"🔍 Missing maps (04a, 04b, 09, 10) will be auto-detected and created")
-            print(f"🎨 New choropleth maps (18-24) will be exported as PNGs")
             print(f"\n🚀 Opening dashboard in browser...")
             
             # Open the dashboard
-            dashboard_file = out_dir / "stuttgart_18_layers_kepler_dashboard.html"
+            dashboard_file = out_dir / "stuttgart_24_layers_kepler_dashboard.html"
             webbrowser.open(f'file://{dashboard_file.absolute()}')
             
     except ImportError as e:

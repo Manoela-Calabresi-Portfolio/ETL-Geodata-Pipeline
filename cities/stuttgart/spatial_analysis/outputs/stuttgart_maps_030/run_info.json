@@ -1,0 +1,27 @@
+{
+  "run_number": "030",
+  "timestamp": "2025-08-26T18:48:15.012560",
+  "output_directory": "cities\\stuttgart\\spatial_analysis\\outputs\\stuttgart_maps_030",
+  "maps_generated": 12,
+  "geojson_layers_exported": true,
+  "comprehensive_analysis": true,
+  "available_data": [
+    "Districts",
+    "Landuse",
+    "Roads",
+    "PT Stops",
+    "Amenities",
+    "City Boundary",
+    "H3 Population"
+  ],
+  "features": [
+    "Overview maps (landuse + population)",
+    "Population vs PT grid analysis",
+    "District accessibility maps",
+    "H3 PT analysis",
+    "H3 amenity analysis",
+    "H3 service diversity",
+    "Base layer exports",
+    "GeoJSON export"
+  ]
+}
