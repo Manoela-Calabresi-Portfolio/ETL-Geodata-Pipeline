@@ -103,10 +103,12 @@ tmp/
 # AI assistant prompt
 stuttgart-etl/config/ai_assistant_prompt.md
 
-#  Database credentials - DO NOT COMMIT TO GIT!
-#
-# credentials/
-#
-# *.env
-#
+# Database credentials - DO NOT COMMIT TO GIT!
+credentials/
+*.env
+.env
+.env.local
+.env.production
+.env.staging
+
 # 
