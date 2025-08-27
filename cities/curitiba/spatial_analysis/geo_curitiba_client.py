@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+all the f#!/usr/bin/env python3
 """
 Geo Curitiba Client - ArcGIS REST Services Integration
 
